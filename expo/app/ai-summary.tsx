@@ -1,18 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Stack } from 'expo-router';
 import { Sparkles } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/colors';
-import { useUserReports } from '@/hooks/useData';
+import { useUserReports, useTeamReports, useAllReports, useTeamMembers } from '@/hooks/useData';
+import { isManagementRole } from '@/types';
 import { Period } from '@/types';
 import PeriodFilter from '@/components/PeriodFilter';
 
 export default function AISummaryScreen() {
   const { user } = useAuth();
   const [period, setPeriod] = useState<Period>('month');
-  const reports = useUserReports(user?.id ?? '', period);
+  const userReports = useUserReports(user?.id ?? '', period);
+  const teamReports = useTeamReports(user?.teamId ?? '', period);
+  const allReports = useAllReports(period);
+  const teamMembers = useTeamMembers(user?.teamId ?? '');
+
+  const reports = useMemo(() => {
+    if (!user) return [];
+    if (isManagementRole(user.role)) return allReports;
+    if (user.role === 'teamlead') {
+      const memberIds = teamMembers.map(m => m.id);
+      return teamReports.filter(r => memberIds.includes(r.closerId) || r.closerId === user.id);
+    }
+    return userReports;
+  }, [user, allReports, teamReports, teamMembers, userReports]);
   const [summary, setSummary] = useState<string | null>(null);
 
   const generateMutation = useMutation({

@@ -257,6 +257,8 @@ function mapLog(row: any): DailyLog {
 }
 
 function mapReport(row: any): CallReport {
+  const analysis = typeof row.analysis === 'string' ? JSON.parse(row.analysis) : row.analysis;
+  const score = row.score || analysis?.overallScore || 0;
   return {
     id: row.id,
     closerId: row.closerId,
@@ -266,8 +268,8 @@ function mapReport(row: any): CallReport {
     callOutcome: row.callOutcome,
     product: row.product,
     transcript: row.transcript,
-    analysis: row.analysis,
-    score: row.score ?? 0,
+    analysis,
+    score,
     date: row.date ?? 0,
     teamType: row.teamType,
   };

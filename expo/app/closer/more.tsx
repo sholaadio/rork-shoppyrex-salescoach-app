@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { PhoneOff, Calendar, Trophy, Sparkles, LogOut } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, mapSupabaseIdToEmployeeId } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/colors';
 import { getRoleLabel, getInitials } from '@/types';
 
@@ -36,7 +36,7 @@ export default function CloserMoreScreen() {
             </View>
             <Text style={styles.name}>{user?.name}</Text>
             <Text style={styles.role}>{getRoleLabel(user?.role ?? 'closer')}</Text>
-            <Text style={styles.empId}>ID: {user?.employeeId}</Text>
+            <Text style={styles.empId}>ID: {user?.id ? mapSupabaseIdToEmployeeId(user.id) : ''}</Text>
           </View>
 
           <View style={styles.menuList}>

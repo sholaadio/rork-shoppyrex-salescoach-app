@@ -41,6 +41,9 @@ export default function AttendanceScreen() {
   }, [currentMonth]);
 
   const relevantUsers = useMemo(() => {
+    if (user?.role === 'closer') {
+      return allUsers.filter(u => u.id === user.id);
+    }
     if (user?.role === 'teamlead') {
       return allUsers.filter(u => u.teamId === user.teamId);
     }

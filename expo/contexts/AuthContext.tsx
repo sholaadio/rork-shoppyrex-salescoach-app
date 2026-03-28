@@ -7,6 +7,23 @@ import { supabase } from '@/services/supabase';
 
 const AUTH_STORAGE_KEY = 'salescoach_auth_user';
 
+export function mapSupabaseIdToEmployeeId(supabaseId: string): string {
+  if (supabaseId.startsWith('ceo')) return 'MGT001';
+  if (supabaseId.startsWith('gm')) return 'MGT002';
+  if (supabaseId === 'hos001') return 'MGT003';
+  if (supabaseId === 'hoc001') return 'MGT004';
+  if (supabaseId === 'hr001') return 'MGT005';
+  if (supabaseId.startsWith('tl')) {
+    const num = parseInt(supabaseId.replace('tl', ''), 10);
+    if (!isNaN(num)) return `TL${String(num).padStart(3, '0')}`;
+  }
+  if (supabaseId.startsWith('c')) {
+    const num = parseInt(supabaseId.replace('c', ''), 10);
+    if (!isNaN(num)) return `SC${String(num).padStart(3, '0')}`;
+  }
+  return supabaseId.toUpperCase();
+}
+
 function mapEmployeeIdToSupabaseId(employeeId: string): string {
   const upper = employeeId.toUpperCase().trim();
 

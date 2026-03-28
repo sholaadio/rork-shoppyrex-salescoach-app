@@ -128,6 +128,14 @@ export function useApprovedLogs(userId: string, period: Period): DailyLog[] {
   return useMemo(() => logs.filter(l => l.status === 'approved'), [logs]);
 }
 
+export function useAllReports(period: Period): CallReport[] {
+  const { data: reports } = useReports();
+  return useMemo(() => {
+    if (!reports) return [];
+    return reports.filter(r => isTimestampInPeriod(r.date, period));
+  }, [reports, period]);
+}
+
 export function useAllApprovedLogs(period: Period): DailyLog[] {
   const { data: logs } = useLogs();
   return useMemo(() => {
