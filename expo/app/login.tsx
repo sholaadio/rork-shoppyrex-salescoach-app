@@ -80,7 +80,7 @@ export default function LoginScreen() {
               <User size={18} color={Colors.muted} />
               <TextInput
                 style={styles.input}
-                placeholder="Employee ID (e.g. c001)"
+                placeholder="Employee ID (e.g. MGT001, TL001, SC001)"
                 placeholderTextColor={Colors.muted}
                 value={employeeId}
                 onChangeText={setEmployeeId}
@@ -140,7 +140,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <Text style={styles.hint}>
-              Use your Employee ID and 4-digit PIN to sign in
+              Use your Employee ID (MGT001, TL001, SC001) and 4-digit PIN
             </Text>
           </View>
         </Animated.View>

@@ -1,30 +1,63 @@
-import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useEffect } from 'react';
 import { fetchUsers, fetchTeams, fetchLogs, fetchReports, fetchGoals, fetchNoAnswers } from '@/services/api';
+import { supabase } from '@/services/supabase';
 import { User, Team, DailyLog, CallReport, Goal, Period } from '@/types';
 import { isDateInPeriod, isTimestampInPeriod, getCurrentMonth } from '@/utils/date';
 
+function useRealtimeSubscription(table: string, queryKey: string) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    console.log(`[Realtime] Subscribing to ${table}...`);
+    const channel = supabase
+      .channel(`${table}_changes`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table },
+        (payload) => {
+          console.log(`[Realtime] ${table} change:`, payload.eventType);
+          void queryClient.invalidateQueries({ queryKey: [queryKey] });
+        }
+      )
+      .subscribe((status) => {
+        console.log(`[Realtime] ${table} subscription status:`, status);
+      });
+
+    return () => {
+      console.log(`[Realtime] Unsubscribing from ${table}`);
+      void supabase.removeChannel(channel);
+    };
+  }, [table, queryKey, queryClient]);
+}
+
 export function useUsers() {
+  useRealtimeSubscription('sc_users', 'users');
   return useQuery({ queryKey: ['users'], queryFn: fetchUsers, staleTime: 30000 });
 }
 
 export function useTeams() {
+  useRealtimeSubscription('sc_teams', 'teams');
   return useQuery({ queryKey: ['teams'], queryFn: fetchTeams, staleTime: 60000 });
 }
 
 export function useLogs() {
+  useRealtimeSubscription('sc_logs', 'logs');
   return useQuery({ queryKey: ['logs'], queryFn: fetchLogs, staleTime: 15000 });
 }
 
 export function useReports() {
+  useRealtimeSubscription('sc_reports', 'reports');
   return useQuery({ queryKey: ['reports'], queryFn: fetchReports, staleTime: 15000 });
 }
 
 export function useGoals() {
+  useRealtimeSubscription('sc_goals', 'goals');
   return useQuery({ queryKey: ['goals'], queryFn: fetchGoals, staleTime: 30000 });
 }
 
 export function useNoAnswers() {
+  useRealtimeSubscription('sc_noanswers', 'noanswers');
   return useQuery({ queryKey: ['noanswers'], queryFn: fetchNoAnswers, staleTime: 30000 });
 }
 
