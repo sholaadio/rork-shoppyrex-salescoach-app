@@ -70,9 +70,25 @@ export async function fetchGoals(): Promise<Goal[]> {
     console.log('[API] Supabase goals error:', error.message);
     throw new Error('Failed to fetch goals');
   }
-  console.log('[API] Goals fetched:', data?.length ?? 0);
-  const mapped = (data ?? []).map(mapGoal).filter(g => g.id);
-  console.log('[API] Goals mapped:', mapped.length, mapped.map(g => ({ id: g.id, month: g.month, userId: g.userId, type: g.type })));
+  console.log('[API] Goals raw rows from Supabase:', JSON.stringify(data));
+  console.log('[API] Goals fetched count:', data?.length ?? 0);
+  const mapped: Goal[] = [];
+  for (let idx = 0; idx < (data ?? []).length; idx++) {
+    const row = data![idx];
+    try {
+      console.log(`[API] Goal row ${idx}:`, JSON.stringify(row));
+      const result = mapGoal(row);
+      console.log(`[API] Goal mapped ${idx}:`, JSON.stringify(result));
+      if (result.id) {
+        mapped.push(result);
+      } else {
+        console.log(`[API] Skipping goal ${idx} - no id`);
+      }
+    } catch (e) {
+      console.log(`[API] Error mapping goal row ${idx}:`, e);
+    }
+  }
+  console.log('[API] Goals final mapped:', mapped.length, JSON.stringify(mapped.map(g => ({ id: g.id, month: g.month, userId: g.userId, type: g.type, label: g.label, target: g.target }))));
   return mapped;
 }
 
@@ -150,17 +166,16 @@ export async function deleteNoAnswer(id: string): Promise<void> {
 
 export async function submitGoal(goal: Partial<Goal>): Promise<Goal> {
   console.log('[API] Submitting goal to Supabase...');
-  const id = goal.id || `goal_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const id = goal.id || `${Math.random().toString(36).slice(2, 9)}`;
   const goalData: Record<string, any> = {
-    type: goal.userId === 'company' ? 'company' : goal.userId?.startsWith('team:') ? 'team' : 'individual',
+    id,
+    type: goal.type ?? 'delivered',
     label: goal.label ?? '',
-    metric: goal.type ?? 'delivered',
     target: goal.target ?? 0,
-    current: 0,
+    userId: goal.userId ?? '',
     setBy: goal.setBy ?? '',
     month: goal.month ?? '',
-    teamId: goal.userId?.startsWith('team:') ? goal.userId.replace('team:', '') : undefined,
-    memberId: (!goal.userId?.startsWith('team:') && goal.userId !== 'company') ? goal.userId : undefined,
+    createdAt: goal.createdAt ?? Date.now(),
   };
   const row = { id, data: goalData };
   console.log('[API] Inserting goal row:', JSON.stringify(row));
@@ -305,11 +320,19 @@ function mapNoAnswer(row: any): NoAnswerLog {
 }
 
 function mapGoal(row: any): Goal {
-  const d = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
-  if (!d) {
-    console.log('[API] Goal row has no data field:', row.id);
+  console.log('[API] mapGoal input:', JSON.stringify(row));
+  
+  let d: any = null;
+  try {
+    d = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+  } catch (e) {
+    console.log('[API] mapGoal JSON parse error:', e);
+  }
+  
+  if (!d || (typeof d === 'object' && Object.keys(d).length === 0)) {
+    console.log('[API] Goal row has no/empty data field:', row.id);
     return {
-      id: row.id,
+      id: row.id ?? '',
       month: row.month ?? '',
       type: row.type ?? 'delivered',
       target: row.target ?? 0,
@@ -319,22 +342,29 @@ function mapGoal(row: any): Goal {
       userId: row.userId ?? '',
     };
   }
-  let userId = '';
-  if (d.type === 'company') {
-    userId = 'company';
-  } else if (d.type === 'team') {
-    userId = `team:${d.teamId ?? ''}`;
-  } else {
-    userId = d.memberId ?? '';
+  
+  let userId = d.userId ?? '';
+  if (!userId) {
+    if (d.type === 'company') {
+      userId = 'company';
+    } else if (d.type === 'team') {
+      userId = `team:${d.teamId ?? ''}`;
+    } else if (d.type === 'individual') {
+      userId = d.memberId ?? '';
+    }
   }
-  return {
-    id: row.id,
+  
+  const mapped: Goal = {
+    id: row.id ?? d.id ?? '',
     month: d.month ?? '',
-    type: d.metric ?? d.type ?? 'delivered',
-    target: d.target ?? 0,
+    type: d.type ?? d.metric ?? 'delivered',
+    target: typeof d.target === 'number' ? d.target : parseInt(d.target) || 0,
     label: d.label ?? '',
     setBy: d.setBy ?? '',
-    createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
+    createdAt: d.createdAt ?? (row.created_at ? new Date(row.created_at).getTime() : 0),
     userId,
   };
+  
+  console.log('[API] mapGoal result:', JSON.stringify(mapped));
+  return mapped;
 }

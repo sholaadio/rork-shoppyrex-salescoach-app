@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator,
 } from 'react-native';
@@ -25,7 +25,7 @@ export default function TeamLeadGoalsScreen() {
   const queryClient = useQueryClient();
   const teamName = useTeamName(user?.teamId);
   const teamMembers = useTeamMembers(user?.teamId ?? '');
-  const { data: allGoals } = useGoals();
+  const { data: allGoals, isLoading: goalsLoading, error: goalsError } = useGoals();
   const { data: allLogs } = useLogs();
   const month = getCurrentMonth();
 
@@ -35,20 +35,34 @@ export default function TeamLeadGoalsScreen() {
   const [label, setLabel] = useState('');
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
 
+  useEffect(() => {
+    console.log('[TL GoalsScreen] allGoals:', JSON.stringify(allGoals));
+    console.log('[TL GoalsScreen] current month:', month);
+  }, [allGoals, month]);
+
   const companyGoals = useMemo(() => {
     if (!allGoals) return [];
-    return allGoals.filter(g => g.month === month && g.userId === 'company');
+    const all = allGoals.filter(g => g.userId === 'company');
+    const monthFiltered = all.filter(g => g.month === month);
+    console.log('[TL GoalsScreen] company goals all:', all.length, 'month filtered:', monthFiltered.length);
+    return monthFiltered.length > 0 ? monthFiltered : all;
   }, [allGoals, month]);
 
   const teamGoals = useMemo(() => {
     if (!allGoals || !user?.teamId) return [];
-    return allGoals.filter(g => g.month === month && g.userId === `team:${user.teamId}`);
+    const all = allGoals.filter(g => g.userId === `team:${user.teamId}`);
+    const monthFiltered = all.filter(g => g.month === month);
+    console.log('[TL GoalsScreen] team goals all:', all.length, 'month filtered:', monthFiltered.length);
+    return monthFiltered.length > 0 ? monthFiltered : all;
   }, [allGoals, month, user?.teamId]);
 
   const memberGoals = useMemo(() => {
     if (!allGoals) return [];
     const memberIds = teamMembers.map(m => m.id);
-    return allGoals.filter(g => g.month === month && memberIds.includes(g.userId));
+    const all = allGoals.filter(g => memberIds.includes(g.userId));
+    const monthFiltered = all.filter(g => g.month === month);
+    console.log('[TL GoalsScreen] member goals all:', all.length, 'month filtered:', monthFiltered.length);
+    return monthFiltered.length > 0 ? monthFiltered : all;
   }, [allGoals, month, teamMembers]);
 
   const getProgress = (goal: any): number => {
@@ -106,6 +120,31 @@ export default function TeamLeadGoalsScreen() {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Goals</Text>
           <Text style={styles.subtitle}>{getMonthLabel(month)}</Text>
+
+          {goalsLoading && (
+            <View style={{ padding: 20, alignItems: 'center' as const }}>
+              <ActivityIndicator color={Colors.orange} />
+              <Text style={{ color: Colors.muted, marginTop: 8, fontSize: 13 }}>Loading goals...</Text>
+            </View>
+          )}
+
+          {goalsError && (
+            <View style={{ padding: 16, backgroundColor: '#FEE2E2', borderRadius: 10, marginBottom: 16 }}>
+              <Text style={{ color: '#DC2626', fontSize: 13, fontWeight: '600' as const }}>Error loading goals: {goalsError instanceof Error ? goalsError.message : 'Unknown error'}</Text>
+            </View>
+          )}
+
+          {!goalsLoading && !goalsError && allGoals && allGoals.length === 0 && (
+            <View style={{ padding: 16, backgroundColor: Colors.card, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: Colors.border }}>
+              <Text style={{ color: Colors.muted, fontSize: 13, textAlign: 'center' as const }}>No goals found in database</Text>
+            </View>
+          )}
+
+          {!goalsLoading && allGoals && allGoals.length > 0 && companyGoals.length === 0 && teamGoals.length === 0 && memberGoals.length === 0 && (
+            <View style={{ padding: 16, backgroundColor: Colors.card, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: Colors.border }}>
+              <Text style={{ color: Colors.muted, fontSize: 13, textAlign: 'center' as const }}>{allGoals.length} goals fetched but none matched filters. Check console logs.</Text>
+            </View>
+          )}
 
           {companyGoals.length > 0 && (
             <View style={styles.section}>

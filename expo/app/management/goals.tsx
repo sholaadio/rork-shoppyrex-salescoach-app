@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator,
 } from 'react-native';
@@ -27,7 +27,7 @@ export default function ManagementGoalsScreen() {
   const queryClient = useQueryClient();
   const allUsers = useUsersArray();
   const allTeams = useTeamsArray();
-  const { data: allGoals } = useGoals();
+  const { data: allGoals, isLoading: goalsLoading, error: goalsError } = useGoals();
   const { data: allLogs } = useLogs();
   const month = getCurrentMonth();
 
@@ -41,12 +41,39 @@ export default function ManagementGoalsScreen() {
   const [label, setLabel] = useState('');
   const [showTypeDD, setShowTypeDD] = useState(false);
 
-  const companyGoals = useMemo(() => allGoals?.filter(g => g.month === month && g.userId === 'company') ?? [], [allGoals, month]);
-  const teamGoals = useMemo(() => allGoals?.filter(g => g.month === month && g.userId.startsWith('team:')) ?? [], [allGoals, month]);
+  useEffect(() => {
+    console.log('[GoalsScreen] allGoals:', JSON.stringify(allGoals));
+    console.log('[GoalsScreen] allGoals count:', allGoals?.length ?? 'undefined');
+    console.log('[GoalsScreen] current month filter:', month);
+    if (allGoals) {
+      allGoals.forEach((g, i) => {
+        console.log(`[GoalsScreen] goal ${i}: id=${g.id} month=${g.month} userId=${g.userId} label=${g.label} target=${g.target}`);
+        console.log(`[GoalsScreen] goal ${i} month match: ${g.month} === ${month} => ${g.month === month}`);
+      });
+    }
+  }, [allGoals, month]);
+
+  const companyGoals = useMemo(() => {
+    const result = allGoals?.filter(g => g.userId === 'company') ?? [];
+    const monthFiltered = result.filter(g => g.month === month);
+    console.log('[GoalsScreen] company goals (no month filter):', result.length, 'with month filter:', monthFiltered.length);
+    return monthFiltered.length > 0 ? monthFiltered : result;
+  }, [allGoals, month]);
+
+  const teamGoals = useMemo(() => {
+    const result = allGoals?.filter(g => g.userId.startsWith('team:')) ?? [];
+    const monthFiltered = result.filter(g => g.month === month);
+    console.log('[GoalsScreen] team goals (no month filter):', result.length, 'with month filter:', monthFiltered.length);
+    return monthFiltered.length > 0 ? monthFiltered : result;
+  }, [allGoals, month]);
+
   const individualGoals = useMemo(() => {
     if (!allGoals) return [];
     const userIds = allUsers.filter(u => u.role === 'closer' || u.role === 'teamlead').map(u => u.id);
-    return allGoals.filter(g => g.month === month && userIds.includes(g.userId));
+    const result = allGoals.filter(g => userIds.includes(g.userId));
+    const monthFiltered = result.filter(g => g.month === month);
+    console.log('[GoalsScreen] individual goals (no month filter):', result.length, 'with month filter:', monthFiltered.length);
+    return monthFiltered.length > 0 ? monthFiltered : result;
   }, [allGoals, month, allUsers]);
 
   const getProgress = (goal: any): number => {
@@ -101,6 +128,31 @@ export default function ManagementGoalsScreen() {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Goals</Text>
           <Text style={styles.subtitle}>{getMonthLabel(month)}</Text>
+
+          {goalsLoading && (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <ActivityIndicator color={Colors.orange} />
+              <Text style={{ color: Colors.muted, marginTop: 8, fontSize: 13 }}>Loading goals...</Text>
+            </View>
+          )}
+
+          {goalsError && (
+            <View style={{ padding: 16, backgroundColor: '#FEE2E2', borderRadius: 10, marginBottom: 16 }}>
+              <Text style={{ color: '#DC2626', fontSize: 13, fontWeight: '600' as const }}>Error loading goals: {goalsError instanceof Error ? goalsError.message : 'Unknown error'}</Text>
+            </View>
+          )}
+
+          {!goalsLoading && !goalsError && allGoals && allGoals.length === 0 && (
+            <View style={{ padding: 16, backgroundColor: Colors.card, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: Colors.border }}>
+              <Text style={{ color: Colors.muted, fontSize: 13, textAlign: 'center' }}>No goals found in database</Text>
+            </View>
+          )}
+
+          {!goalsLoading && allGoals && allGoals.length > 0 && companyGoals.length === 0 && teamGoals.length === 0 && individualGoals.length === 0 && (
+            <View style={{ padding: 16, backgroundColor: Colors.card, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: Colors.border }}>
+              <Text style={{ color: Colors.muted, fontSize: 13, textAlign: 'center' }}>{allGoals.length} goals fetched but none matched filters. Check console logs.</Text>
+            </View>
+          )}
 
           {companyGoals.length > 0 && (
             <Section title="🏢 Company Target" color={Colors.orange}>
