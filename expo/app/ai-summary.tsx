@@ -4,7 +4,6 @@ import { Stack } from 'expo-router';
 import { Sparkles } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
 import { useUserReports, useTeamReports, useAllReports, useTeamMembers } from '@/hooks/useData';
 import { isManagementRole } from '@/types';
@@ -77,16 +76,16 @@ export default function AISummaryScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: 'AI Summary', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>✨ AI Summary Report</Text>
-        <Text style={styles.subtitle}>AI-powered analysis of your call performance</Text>
+        <Text style={[styles.title, { color: colors.text }]}>✨ AI Summary Report</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>AI-powered analysis of your call performance</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Select period:</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.cardLabel, { color: colors.text }]}>Select period:</Text>
           <PeriodFilter selected={period} onSelect={setPeriod} />
-          <Text style={styles.reportCount}>{reports.length} call reports found</Text>
+          <Text style={[styles.reportCount, { color: colors.muted }]}>{reports.length} call reports found</Text>
 
           <TouchableOpacity
-            style={[styles.generateBtn, reports.length === 0 && { opacity: 0.5 }]}
+            style={[styles.generateBtn, { backgroundColor: colors.orange }, reports.length === 0 && { opacity: 0.5 }]}
             onPress={() => generateMutation.mutate()}
             disabled={generateMutation.isPending || reports.length === 0}
             activeOpacity={0.8}
@@ -103,8 +102,8 @@ export default function AISummaryScreen() {
         </View>
 
         {summary && (
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryText}>{summary}</Text>
+          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.summaryText, { color: colors.soft }]}>{summary}</Text>
           </View>
         )}
 
@@ -115,19 +114,19 @@ export default function AISummaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 16 },
-  title: { fontSize: 22, fontWeight: '800' as const, color: Colors.text, marginBottom: 4 },
-  subtitle: { fontSize: 13, color: Colors.muted, marginBottom: 16 },
-  card: { backgroundColor: Colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: Colors.border },
-  cardLabel: { fontSize: 14, fontWeight: '600' as const, color: Colors.text, marginBottom: 10 },
-  reportCount: { fontSize: 12, color: Colors.muted, marginBottom: 16 },
+  title: { fontSize: 22, fontWeight: '800' as const, marginBottom: 4 },
+  subtitle: { fontSize: 13, marginBottom: 16 },
+  card: { borderRadius: 16, padding: 18, borderWidth: 1 },
+  cardLabel: { fontSize: 14, fontWeight: '600' as const, marginBottom: 10 },
+  reportCount: { fontSize: 12, marginBottom: 16 },
   generateBtn: {
-    flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.orange,
+    flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     borderRadius: 12, paddingVertical: 16, gap: 8,
   },
   generateText: { color: '#fff', fontSize: 15, fontWeight: '700' as const },
-  summaryCard: { backgroundColor: Colors.card, borderRadius: 16, padding: 18, marginTop: 16, borderWidth: 1, borderColor: Colors.border },
-  summaryText: { fontSize: 14, color: Colors.soft, lineHeight: 22 },
+  summaryCard: { borderRadius: 16, padding: 18, marginTop: 16, borderWidth: 1 },
+  summaryText: { fontSize: 14, lineHeight: 22 },
 });

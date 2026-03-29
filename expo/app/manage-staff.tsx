@@ -8,7 +8,6 @@ import { ChevronDown, UserPlus, Pencil, Trash2, Users } from 'lucide-react-nativ
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
 import { UserRole, getInitials, getRoleLabel, getRoleBadgeColor } from '@/types';
 import { useUsersArray, useTeamsArray } from '@/hooks/useData';
@@ -66,16 +65,8 @@ export default function ManageStaffScreen() {
       if (!name.trim()) throw new Error('Enter staff name');
       if (!pin || pin.length !== 4) throw new Error('Enter a 4-digit PIN');
       if (!teamId && (role === 'closer' || role === 'teamlead')) throw new Error('Select a team');
-
       const empId = getNextEmployeeId(role);
-      const newUser = {
-        id: empId,
-        employeeId: empId,
-        name: name.trim(),
-        pin,
-        role,
-        teamId: teamId || undefined,
-      };
+      const newUser = { id: empId, employeeId: empId, name: name.trim(), pin, role, teamId: teamId || undefined };
       return bulkSaveUsers([newUser]);
     },
     onSuccess: () => {
@@ -93,7 +84,6 @@ export default function ManageStaffScreen() {
       const lines = bulkText.trim().split('\n').filter(l => l.trim());
       if (lines.length === 0) throw new Error('Enter at least one staff member');
       if (lines.length > 40) throw new Error('Maximum 40 staff at once');
-
       const newUsers = lines.map((line, idx) => {
         const parts = line.split(',').map(s => s.trim());
         const staffName = parts[0];
@@ -101,24 +91,14 @@ export default function ManageStaffScreen() {
         const staffRole = (parts[2] as UserRole) || 'closer';
         const staffTeam = parts[3] || 'team1';
         const empId = getNextEmployeeId(staffRole);
-
-        return {
-          id: `${empId}_${idx}`,
-          employeeId: `${empId}_${idx}`,
-          name: staffName,
-          pin: staffPin,
-          role: staffRole,
-          teamId: staffTeam,
-        };
+        return { id: `${empId}_${idx}`, employeeId: `${empId}_${idx}`, name: staffName, pin: staffPin, role: staffRole, teamId: staffTeam };
       });
-
       return bulkSaveUsers(newUsers);
     },
     onSuccess: () => {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Success', 'Staff members added');
-      setBulkText('');
-      setMode('list');
+      setBulkText(''); setMode('list');
       void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (err) => Alert.alert('Error', err instanceof Error ? err.message : 'Failed'),
@@ -132,9 +112,7 @@ export default function ManageStaffScreen() {
     onSuccess: () => {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Success', 'Staff updated');
-      setMode('list');
-      setEditingUserId('');
-      setName('');
+      setMode('list'); setEditingUserId(''); setName('');
       void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (err) => Alert.alert('Error', err instanceof Error ? err.message : 'Failed'),
@@ -157,9 +135,7 @@ export default function ManageStaffScreen() {
   };
 
   const startEdit = (u: typeof allUsers[0]) => {
-    setEditingUserId(u.id);
-    setName(u.name);
-    setMode('edit');
+    setEditingUserId(u.id); setName(u.name); setMode('edit');
   };
 
   const selectedTeam = allTeams.find(t => t.id === teamId);
@@ -168,18 +144,18 @@ export default function ManageStaffScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: 'Manage Staff', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>👥 Manage Staff</Text>
-        <Text style={styles.subtitle}>{allUsers.length} total staff members</Text>
+        <Text style={[styles.title, { color: colors.text }]}>👥 Manage Staff</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>{allUsers.length} total staff members</Text>
 
         <View style={styles.modeRow}>
-          <TouchableOpacity style={[styles.modePill, mode === 'list' && styles.modePillActive]} onPress={() => setMode('list')}>
-            <Text style={[styles.modePillText, mode === 'list' && { color: '#fff' }]}>Staff List</Text>
+          <TouchableOpacity style={[styles.modePill, { backgroundColor: colors.card, borderColor: colors.border }, mode === 'list' && { backgroundColor: colors.green, borderColor: colors.green }]} onPress={() => setMode('list')}>
+            <Text style={[styles.modePillText, { color: colors.soft }, mode === 'list' && { color: '#fff' }]}>Staff List</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.modePill, mode === 'add' && styles.modePillActive]} onPress={() => setMode('add')}>
-            <Text style={[styles.modePillText, mode === 'add' && { color: '#fff' }]}>+ Add Single</Text>
+          <TouchableOpacity style={[styles.modePill, { backgroundColor: colors.card, borderColor: colors.border }, mode === 'add' && { backgroundColor: colors.green, borderColor: colors.green }]} onPress={() => setMode('add')}>
+            <Text style={[styles.modePillText, { color: colors.soft }, mode === 'add' && { color: '#fff' }]}>+ Add Single</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.modePill, mode === 'bulk' && styles.modePillActive]} onPress={() => setMode('bulk')}>
-            <Text style={[styles.modePillText, mode === 'bulk' && { color: '#fff' }]}>Bulk Add</Text>
+          <TouchableOpacity style={[styles.modePill, { backgroundColor: colors.card, borderColor: colors.border }, mode === 'bulk' && { backgroundColor: colors.green, borderColor: colors.green }]} onPress={() => setMode('bulk')}>
+            <Text style={[styles.modePillText, { color: colors.soft }, mode === 'bulk' && { color: '#fff' }]}>Bulk Add</Text>
           </TouchableOpacity>
         </View>
 
@@ -188,21 +164,21 @@ export default function ManageStaffScreen() {
             {closersAndLeads.map(u => {
               const team = allTeams.find(t => t.id === u.teamId);
               return (
-                <View key={u.id} style={styles.staffCard}>
+                <View key={u.id} style={[styles.staffCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                   <View style={[styles.staffAvatar, { backgroundColor: getRoleBadgeColor(u.role) }]}>
                     <Text style={styles.staffAvatarText}>{getInitials(u.name)}</Text>
                   </View>
                   <View style={styles.staffInfo}>
-                    <Text style={styles.staffName}>{u.name}</Text>
-                    <Text style={styles.staffMeta}>{getRoleLabel(u.role)} · {team?.name ?? '—'} · {u.employeeId}</Text>
+                    <Text style={[styles.staffName, { color: colors.text }]}>{u.name}</Text>
+                    <Text style={[styles.staffMeta, { color: colors.muted }]}>{getRoleLabel(u.role)} · {team?.name ?? '—'} · {u.employeeId}</Text>
                   </View>
                   <View style={styles.staffActions}>
-                    <TouchableOpacity style={styles.iconBtn} onPress={() => startEdit(u)}>
-                      <Pencil size={16} color={Colors.blue} />
+                    <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => startEdit(u)}>
+                      <Pencil size={16} color={colors.blue} />
                     </TouchableOpacity>
                     {canDelete && (
-                      <TouchableOpacity style={styles.iconBtn} onPress={() => handleRemove(u.id, u.name)}>
-                        <Trash2 size={16} color={Colors.red} />
+                      <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => handleRemove(u.id, u.name)}>
+                        <Trash2 size={16} color={colors.red} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -213,96 +189,91 @@ export default function ManageStaffScreen() {
         )}
 
         {mode === 'add' && (
-          <View style={styles.formCard}>
+          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.formHeader}>
-              <UserPlus size={20} color={Colors.green} />
-              <Text style={styles.formTitle}>Add New Staff</Text>
+              <UserPlus size={20} color={colors.green} />
+              <Text style={[styles.formTitle, { color: colors.text }]}>Add New Staff</Text>
             </View>
-
-            <Text style={styles.label}>FULL NAME</Text>
-            <TextInput style={styles.input} placeholder="e.g. Chukwuemeka Obi" placeholderTextColor={Colors.muted} value={name} onChangeText={setName} />
-
-            <Text style={styles.label}>4-DIGIT PIN</Text>
-            <TextInput style={styles.input} placeholder="e.g. 2001" placeholderTextColor={Colors.muted} value={pin} onChangeText={t => setPin(t.replace(/[^0-9]/g, '').slice(0, 4))} keyboardType="number-pad" maxLength={4} />
-
-            <Text style={styles.label}>ROLE</Text>
-            <TouchableOpacity style={styles.dropdown} onPress={() => setShowRoleDD(!showRoleDD)}>
-              <Text style={styles.ddText}>{ROLES.find(r => r.key === role)?.label}</Text>
-              <ChevronDown size={16} color={Colors.muted} />
+            <Text style={[styles.label, { color: colors.muted }]}>FULL NAME</Text>
+            <TextInput style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} placeholder="e.g. Chukwuemeka Obi" placeholderTextColor={colors.muted} value={name} onChangeText={setName} />
+            <Text style={[styles.label, { color: colors.muted }]}>4-DIGIT PIN</Text>
+            <TextInput style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} placeholder="e.g. 2001" placeholderTextColor={colors.muted} value={pin} onChangeText={t => setPin(t.replace(/[^0-9]/g, '').slice(0, 4))} keyboardType="number-pad" maxLength={4} />
+            <Text style={[styles.label, { color: colors.muted }]}>ROLE</Text>
+            <TouchableOpacity style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => setShowRoleDD(!showRoleDD)}>
+              <Text style={[styles.ddText, { color: colors.text }]}>{ROLES.find(r => r.key === role)?.label}</Text>
+              <ChevronDown size={16} color={colors.muted} />
             </TouchableOpacity>
             {showRoleDD && (
-              <View style={styles.ddList}>
+              <View style={[styles.ddList, { backgroundColor: colors.cardHover }]}>
                 {ROLES.map(r => (
-                  <TouchableOpacity key={r.key} style={styles.ddItem} onPress={() => { setRole(r.key); setShowRoleDD(false); }}>
-                    <Text style={styles.ddItemText}>{r.label}</Text>
+                  <TouchableOpacity key={r.key} style={[styles.ddItem, { borderBottomColor: colors.border }]} onPress={() => { setRole(r.key); setShowRoleDD(false); }}>
+                    <Text style={[styles.ddItemText, { color: colors.text }]}>{r.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             )}
-
             {(role === 'closer' || role === 'teamlead') && (
               <>
-                <Text style={styles.label}>TEAM</Text>
-                <TouchableOpacity style={styles.dropdown} onPress={() => setShowTeamDD(!showTeamDD)}>
-                  <Text style={styles.ddText}>{selectedTeam?.name || 'Select team...'}</Text>
-                  <ChevronDown size={16} color={Colors.muted} />
+                <Text style={[styles.label, { color: colors.muted }]}>TEAM</Text>
+                <TouchableOpacity style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => setShowTeamDD(!showTeamDD)}>
+                  <Text style={[styles.ddText, { color: colors.text }]}>{selectedTeam?.name || 'Select team...'}</Text>
+                  <ChevronDown size={16} color={colors.muted} />
                 </TouchableOpacity>
                 {showTeamDD && (
-                  <View style={styles.ddList}>
+                  <View style={[styles.ddList, { backgroundColor: colors.cardHover }]}>
                     {allTeams.map(t => (
-                      <TouchableOpacity key={t.id} style={styles.ddItem} onPress={() => { setTeamId(t.id); setShowTeamDD(false); }}>
-                        <Text style={styles.ddItemText}>{t.name}</Text>
+                      <TouchableOpacity key={t.id} style={[styles.ddItem, { borderBottomColor: colors.border }]} onPress={() => { setTeamId(t.id); setShowTeamDD(false); }}>
+                        <Text style={[styles.ddItemText, { color: colors.text }]}>{t.name}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                 )}
               </>
             )}
-
-            <TouchableOpacity style={styles.submitBtn} onPress={() => addMutation.mutate()} disabled={addMutation.isPending} activeOpacity={0.8}>
+            <TouchableOpacity style={[styles.submitBtn, { backgroundColor: colors.green }]} onPress={() => addMutation.mutate()} disabled={addMutation.isPending} activeOpacity={0.8}>
               {addMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Add Staff Member</Text>}
             </TouchableOpacity>
           </View>
         )}
 
         {mode === 'bulk' && (
-          <View style={styles.formCard}>
+          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.formHeader}>
-              <Users size={20} color={Colors.orange} />
-              <Text style={styles.formTitle}>Bulk Add Staff</Text>
+              <Users size={20} color={colors.orange} />
+              <Text style={[styles.formTitle, { color: colors.text }]}>Bulk Add Staff</Text>
             </View>
-            <Text style={styles.helpText}>
+            <Text style={[styles.helpText, { color: colors.soft, backgroundColor: colors.background }]}>
               Enter one staff per line in format:{'\n'}
               Name, PIN, Role, TeamID{'\n'}
               Example: John Doe, 2001, closer, team1
             </Text>
             <TextInput
-              style={[styles.input, { minHeight: 160, textAlignVertical: 'top' as const }]}
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border, minHeight: 160, textAlignVertical: 'top' as const }]}
               placeholder="Adeola Johnson, 2010, closer, team1&#10;Blessing Nwosu, 2011, closer, team2"
-              placeholderTextColor={Colors.muted}
+              placeholderTextColor={colors.muted}
               value={bulkText}
               onChangeText={setBulkText}
               multiline
             />
-            <TouchableOpacity style={[styles.submitBtn, { backgroundColor: Colors.orange }]} onPress={() => bulkMutation.mutate()} disabled={bulkMutation.isPending} activeOpacity={0.8}>
+            <TouchableOpacity style={[styles.submitBtn, { backgroundColor: colors.orange }]} onPress={() => bulkMutation.mutate()} disabled={bulkMutation.isPending} activeOpacity={0.8}>
               {bulkMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Add All Staff</Text>}
             </TouchableOpacity>
           </View>
         )}
 
         {mode === 'edit' && (
-          <View style={styles.formCard}>
+          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.formHeader}>
-              <Pencil size={20} color={Colors.blue} />
-              <Text style={styles.formTitle}>Edit Staff Name</Text>
+              <Pencil size={20} color={colors.blue} />
+              <Text style={[styles.formTitle, { color: colors.text }]}>Edit Staff Name</Text>
             </View>
-            <Text style={styles.label}>FULL NAME</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} />
+            <Text style={[styles.label, { color: colors.muted }]}>FULL NAME</Text>
+            <TextInput style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} value={name} onChangeText={setName} />
             <View style={styles.editActions}>
-              <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: Colors.muted }]} onPress={() => { setMode('list'); setEditingUserId(''); setName(''); }}>
+              <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: colors.muted }]} onPress={() => { setMode('list'); setEditingUserId(''); setName(''); }}>
                 <Text style={styles.submitText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.submitBtn, { flex: 1 }]} onPress={() => editMutation.mutate()} disabled={editMutation.isPending}>
+              <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: colors.green }]} onPress={() => editMutation.mutate()} disabled={editMutation.isPending}>
                 {editMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Save Changes</Text>}
               </TouchableOpacity>
             </View>
@@ -316,38 +287,37 @@ export default function ManageStaffScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 16 },
-  title: { fontSize: 22, fontWeight: '800' as const, color: Colors.text },
-  subtitle: { fontSize: 13, color: Colors.muted, marginBottom: 16 },
+  title: { fontSize: 22, fontWeight: '800' as const },
+  subtitle: { fontSize: 13, marginBottom: 16 },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modePill: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border },
-  modePillActive: { backgroundColor: Colors.green, borderColor: Colors.green },
-  modePillText: { fontSize: 13, fontWeight: '600' as const, color: Colors.soft },
+  modePill: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, borderWidth: 1 },
+  modePillText: { fontSize: 13, fontWeight: '600' as const },
   staffCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderRadius: 12, padding: 14,
-    marginBottom: 6, borderWidth: 1, borderColor: Colors.border, gap: 12,
+    flexDirection: 'row', alignItems: 'center', borderRadius: 12, padding: 14,
+    marginBottom: 6, borderWidth: 1, gap: 12,
   },
   staffAvatar: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center' },
   staffAvatarText: { color: '#fff', fontWeight: '700' as const, fontSize: 12 },
   staffInfo: { flex: 1 },
-  staffName: { fontSize: 14, fontWeight: '700' as const, color: Colors.text },
-  staffMeta: { fontSize: 11, color: Colors.muted, marginTop: 2 },
+  staffName: { fontSize: 14, fontWeight: '700' as const },
+  staffMeta: { fontSize: 11, marginTop: 2 },
   staffActions: { flexDirection: 'row', gap: 8 },
-  iconBtn: { width: 34, height: 34, borderRadius: 8, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Colors.border },
-  formCard: { backgroundColor: Colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: Colors.border },
+  iconBtn: { width: 34, height: 34, borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  formCard: { borderRadius: 16, padding: 18, borderWidth: 1 },
   formHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  formTitle: { fontSize: 16, fontWeight: '700' as const, color: Colors.text },
-  label: { fontSize: 10, fontWeight: '700' as const, color: Colors.muted, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 6 },
-  input: { backgroundColor: Colors.background, borderRadius: 10, padding: 12, color: Colors.text, fontSize: 14, borderWidth: 1, borderColor: Colors.border, marginBottom: 12 },
-  dropdown: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: Colors.background, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: Colors.border, marginBottom: 12 },
-  ddText: { color: Colors.text, fontSize: 14 },
-  ddList: { backgroundColor: Colors.cardHover, borderRadius: 8, marginBottom: 12 },
-  ddItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  ddItemText: { color: Colors.text, fontSize: 14 },
-  submitBtn: { backgroundColor: Colors.green, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
+  formTitle: { fontSize: 16, fontWeight: '700' as const },
+  label: { fontSize: 10, fontWeight: '700' as const, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 6 },
+  input: { borderRadius: 10, padding: 12, fontSize: 14, borderWidth: 1, marginBottom: 12 },
+  dropdown: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderRadius: 10, padding: 12, borderWidth: 1, marginBottom: 12 },
+  ddText: { fontSize: 14 },
+  ddList: { borderRadius: 8, marginBottom: 12 },
+  ddItem: { padding: 12, borderBottomWidth: 1 },
+  ddItemText: { fontSize: 14 },
+  submitBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
   submitText: { color: '#fff', fontSize: 15, fontWeight: '700' as const },
-  helpText: { fontSize: 12, color: Colors.soft, lineHeight: 18, marginBottom: 12, backgroundColor: Colors.background, borderRadius: 8, padding: 12 },
+  helpText: { fontSize: 12, lineHeight: 18, marginBottom: 12, borderRadius: 8, padding: 12 },
   editActions: { flexDirection: 'row', gap: 10 },
 });

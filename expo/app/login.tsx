@@ -8,11 +8,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Lock, User, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/contexts/AuthContext';
-import { useColors } from '@/contexts/ThemeContext';
-import { Colors } from '@/constants/colors';
+import { useTheme, useColors } from '@/contexts/ThemeContext';
 
 export default function LoginScreen() {
   const { loginMutation, user, portal } = useAuth();
+  const { isDark } = useTheme();
   const colors = useColors();
   const router = useRouter();
   const [employeeId, setEmployeeId] = useState('');
@@ -56,10 +56,14 @@ export default function LoginScreen() {
     );
   };
 
+  const gradientColors: [string, string, string] = isDark
+    ? ['#0A0D16', '#07080F', '#050610']
+    : ['#E8ECFF', '#F0F4FF', '#F5F7FF'];
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={['#0A0D16', '#07080F', '#050610']}
+        colors={gradientColors}
         style={StyleSheet.absoluteFill}
       />
       <KeyboardAvoidingView
@@ -68,22 +72,22 @@ export default function LoginScreen() {
       >
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <View style={styles.logoSection}>
-            <View style={styles.logoCircle}>
+            <View style={[styles.logoCircle, { backgroundColor: colors.green }]}>
               <Text style={styles.logoText}>S</Text>
             </View>
-            <Text style={styles.title}>SalesCoach</Text>
-            <Text style={styles.subtitle}>Shoppyrex</Text>
+            <Text style={[styles.title, { color: colors.text }]}>SalesCoach</Text>
+            <Text style={[styles.subtitle, { color: colors.muted }]}>Shoppyrex</Text>
           </View>
 
-          <View style={styles.formSection}>
-            <Text style={styles.formTitle}>Sign in to your account</Text>
+          <View style={[styles.formSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.formTitle, { color: colors.soft }]}>Sign in to your account</Text>
 
-            <View style={styles.inputContainer}>
-              <User size={18} color={Colors.muted} />
+            <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <User size={18} color={colors.muted} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Employee ID (e.g. MGT001, TL001, SC001)"
-                placeholderTextColor={Colors.muted}
+                placeholderTextColor={colors.muted}
                 value={employeeId}
                 onChangeText={setEmployeeId}
                 autoCapitalize="none"
@@ -92,12 +96,12 @@ export default function LoginScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Lock size={18} color={Colors.muted} />
+            <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <Lock size={18} color={colors.muted} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="4-digit PIN"
-                placeholderTextColor={Colors.muted}
+                placeholderTextColor={colors.muted}
                 value={pin}
                 onChangeText={(t) => setPin(t.replace(/[^0-9]/g, '').slice(0, 4))}
                 secureTextEntry
@@ -107,14 +111,14 @@ export default function LoginScreen() {
               />
               <View style={styles.pinDots}>
                 {[0, 1, 2, 3].map(i => (
-                  <View key={i} style={[styles.dot, pin.length > i && styles.dotFilled]} />
+                  <View key={i} style={[styles.dot, { backgroundColor: colors.border }, pin.length > i && { backgroundColor: colors.green }]} />
                 ))}
               </View>
             </View>
 
             {error ? (
               <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+                <Text style={[styles.errorText, { color: colors.red }]}>{error}</Text>
               </View>
             ) : null}
 
@@ -141,7 +145,7 @@ export default function LoginScreen() {
               </LinearGradient>
             </TouchableOpacity>
 
-            <Text style={styles.hint}>
+            <Text style={[styles.hint, { color: colors.muted }]}>
               Use your Employee ID (MGT001, TL001, SC001) and 4-digit PIN
             </Text>
           </View>
@@ -154,7 +158,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -171,7 +174,6 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Colors.green,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -184,42 +186,34 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '800' as const,
-    color: Colors.text,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.muted,
     marginTop: 4,
   },
   formSection: {
-    backgroundColor: Colors.card,
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   formTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.soft,
     marginBottom: 20,
     textAlign: 'center' as const,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   input: {
     flex: 1,
-    color: Colors.text,
     fontSize: 15,
     marginLeft: 10,
   },
@@ -231,10 +225,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.border,
-  },
-  dotFilled: {
-    backgroundColor: Colors.green,
   },
   errorContainer: {
     backgroundColor: 'rgba(255,107,107,0.1)',
@@ -243,7 +233,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   errorText: {
-    color: Colors.red,
     fontSize: 13,
     textAlign: 'center' as const,
   },
@@ -264,7 +253,6 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
   },
   hint: {
-    color: Colors.muted,
     fontSize: 12,
     textAlign: 'center' as const,
     marginTop: 16,

@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { Colors, getScoreColor } from '@/constants/colors';
+import { getScoreColor } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
 import { useReports } from '@/hooks/useData';
 import { formatTimestamp } from '@/utils/date';
@@ -118,140 +118,140 @@ export default function ReportDetailScreen() {
       <Stack.Screen options={{ title: 'Call Analysis', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.scoreSection}>
-          <View style={[styles.scoreCircle, { borderColor: getScoreColor(score) }]}>
-            <Text style={[styles.scoreNum, { color: getScoreColor(score) }]}>{score}</Text>
-            <Text style={styles.scoreOf}>/100</Text>
+          <View style={[styles.scoreCircle, { borderColor: getScoreColor(score, colors) }]}>
+            <Text style={[styles.scoreNum, { color: getScoreColor(score, colors) }]}>{score}</Text>
+            <Text style={[styles.scoreOf, { color: colors.muted }]}>/100</Text>
           </View>
 
           {(closeRate != null || duration != null) && (
             <View style={styles.statPillsRow}>
               {closeRate != null && (
-                <View style={styles.statPill}>
-                  <BarChart3 size={13} color={Colors.blue} />
-                  <Text style={styles.statPillLabel}>Close Rate</Text>
-                  <Text style={styles.statPillValue}>{closeRate}%</Text>
+                <View style={[styles.statPill, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <BarChart3 size={13} color={colors.blue} />
+                  <Text style={[styles.statPillLabel, { color: colors.muted }]}>Close Rate</Text>
+                  <Text style={[styles.statPillValue, { color: colors.text }]}>{closeRate}%</Text>
                 </View>
               )}
               {duration != null && (
-                <View style={styles.statPill}>
-                  <Clock size={13} color={Colors.purple} />
-                  <Text style={styles.statPillLabel}>Duration</Text>
-                  <Text style={styles.statPillValue}>{duration}</Text>
+                <View style={[styles.statPill, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <Clock size={13} color={colors.purple} />
+                  <Text style={[styles.statPillLabel, { color: colors.muted }]}>Duration</Text>
+                  <Text style={[styles.statPillValue, { color: colors.text }]}>{duration}</Text>
                 </View>
               )}
             </View>
           )}
         </View>
 
-        <View style={styles.metaCard}>
-          <MetaRow label="Product" value={report.product} />
-          <MetaRow label="Call Type" value={report.callType === 'phone' ? '📞 Phone Call' : '💬 WhatsApp'} />
-          <MetaRow label="Outcome" value={report.callOutcome} />
-          <MetaRow label="Date" value={formatTimestamp(report.date)} />
-          <MetaRow label="Closer" value={report.closerName} />
+        <View style={[styles.metaCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <MetaRow label="Product" value={report.product} colors={colors} />
+          <MetaRow label="Call Type" value={report.callType === 'phone' ? '📞 Phone Call' : '💬 WhatsApp'} colors={colors} />
+          <MetaRow label="Outcome" value={report.callOutcome} colors={colors} />
+          <MetaRow label="Date" value={formatTimestamp(report.date)} colors={colors} />
+          <MetaRow label="Closer" value={report.closerName} colors={colors} />
         </View>
 
         {analysis?.verdict && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Verdict</Text>
-            <Text style={styles.verdictText}>{analysis.verdict}</Text>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Verdict</Text>
+            <Text style={[styles.verdictText, { color: colors.soft }]}>{analysis.verdict}</Text>
           </View>
         )}
 
         {(analysis?.strengths?.length ?? 0) > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: Colors.green }]}>Strengths</Text>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.green }]}>Strengths</Text>
             {analysis!.strengths!.map((s: string, i: number) => (
-              <Text key={i} style={styles.listItem}>✅ {s}</Text>
+              <Text key={i} style={[styles.listItem, { color: colors.soft }]}>✅ {s}</Text>
             ))}
           </View>
         )}
 
         {(analysis?.weaknesses?.length ?? 0) > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: Colors.red }]}>Weaknesses</Text>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.red }]}>Weaknesses</Text>
             {analysis!.weaknesses!.map((w: string, i: number) => (
-              <Text key={i} style={styles.listItem}>⚠️ {w}</Text>
+              <Text key={i} style={[styles.listItem, { color: colors.soft }]}>⚠️ {w}</Text>
             ))}
           </View>
         )}
 
         {(analysis?.improvements?.length ?? 0) > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: Colors.blue }]}>Improvements</Text>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.blue }]}>Improvements</Text>
             {analysis!.improvements!.map((imp: string, i: number) => (
-              <Text key={i} style={styles.listItem}>💡 {imp}</Text>
+              <Text key={i} style={[styles.listItem, { color: colors.soft }]}>💡 {imp}</Text>
             ))}
           </View>
         )}
 
         {orderedSkills.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Skill Breakdown</Text>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Skill Breakdown</Text>
             {orderedSkills.map((skill) => (
               <View key={skill.name} style={styles.skillRow}>
-                <Text style={styles.skillLabel}>{skill.name}</Text>
-                <View style={styles.skillBar}>
-                  <View style={[styles.skillFill, { width: `${Math.min(skill.value, 100)}%`, backgroundColor: getScoreColor(skill.value) }]} />
+                <Text style={[styles.skillLabel, { color: colors.soft }]}>{skill.name}</Text>
+                <View style={[styles.skillBar, { backgroundColor: colors.border }]}>
+                  <View style={[styles.skillFill, { width: `${Math.min(skill.value, 100)}%`, backgroundColor: getScoreColor(skill.value, colors) }]} />
                 </View>
-                <Text style={[styles.skillVal, { color: getScoreColor(skill.value) }]}>{skill.value}</Text>
+                <Text style={[styles.skillVal, { color: getScoreColor(skill.value, colors) }]}>{skill.value}</Text>
               </View>
             ))}
           </View>
         )}
 
         {ngLanguage && (
-          <View style={styles.section}>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.ngIcon}>🗣️</Text>
-              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>NG Language</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0, color: colors.text }]}>NG Language</Text>
             </View>
-            <Text style={styles.sectionBody}>{typeof ngLanguage === 'string' ? ngLanguage : JSON.stringify(ngLanguage)}</Text>
+            <Text style={[styles.sectionBody, { color: colors.soft }]}>{typeof ngLanguage === 'string' ? ngLanguage : JSON.stringify(ngLanguage)}</Text>
           </View>
         )}
 
         {criticalMoment && (
-          <View style={[styles.section, styles.criticalCard]}>
+          <View style={[styles.section, styles.criticalCard, { backgroundColor: colors.card, borderColor: colors.border, borderLeftColor: colors.yellow }]}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.ngIcon}>⚡</Text>
-              <Text style={[styles.sectionTitle, { marginBottom: 0, color: Colors.yellow }]}>Critical Moment</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0, color: colors.yellow }]}>Critical Moment</Text>
             </View>
-            <Text style={styles.sectionBody}>{typeof criticalMoment === 'string' ? criticalMoment : JSON.stringify(criticalMoment)}</Text>
+            <Text style={[styles.sectionBody, { color: colors.soft }]}>{typeof criticalMoment === 'string' ? criticalMoment : JSON.stringify(criticalMoment)}</Text>
           </View>
         )}
 
         {memorizeScript && (
-          <View style={[styles.section, styles.memorizeCard]}>
+          <View style={[styles.section, styles.memorizeCard, { backgroundColor: colors.card, borderColor: colors.border, borderLeftColor: colors.green }]}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.ngIcon}>📝</Text>
-              <Text style={[styles.sectionTitle, { marginBottom: 0, color: Colors.green }]}>Memorize This Script</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0, color: colors.green }]}>Memorize This Script</Text>
             </View>
-            <Text style={styles.memorizeText}>{memorizeScript}</Text>
+            <Text style={[styles.memorizeText, { color: colors.soft }]}>{memorizeScript}</Text>
           </View>
         )}
 
         {resources && (youtubeResources.length > 0 || bookResources.length > 0 || podcastResources.length > 0) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>AI-Recommended Learning Resources</Text>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>AI-Recommended Learning Resources</Text>
 
             {youtubeResources.length > 0 && (
               <View style={styles.resourceGroup}>
                 <View style={styles.resourceGroupHeader}>
                   <Youtube size={16} color="#FF0000" />
-                  <Text style={styles.resourceGroupTitle}>YouTube</Text>
+                  <Text style={[styles.resourceGroupTitle, { color: colors.text }]}>YouTube</Text>
                 </View>
                 {youtubeResources.map((res: any, i: number) => {
                   const title = res.title || res.name || '';
                   const ytUrl = res.url || `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' sales training')}`;
                   return (
-                    <TouchableOpacity key={`yt-${i}`} style={styles.resourceItem} onPress={() => openUrl(ytUrl)} activeOpacity={0.7}>
-                      <Text style={styles.resourceItemTitle}>{title}</Text>
+                    <TouchableOpacity key={`yt-${i}`} style={[styles.resourceItem, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(ytUrl)} activeOpacity={0.7}>
+                      <Text style={[styles.resourceItemTitle, { color: colors.text }]}>{title}</Text>
                       {(res.description || res.channel) && (
-                        <Text style={styles.resourceItemDesc}>{res.description || res.channel}</Text>
+                        <Text style={[styles.resourceItemDesc, { color: colors.soft }]}>{res.description || res.channel}</Text>
                       )}
                       <View style={styles.resourceLink}>
-                        <ExternalLink size={12} color={Colors.blue} />
-                        <Text style={styles.resourceLinkText}>Search on YouTube →</Text>
+                        <ExternalLink size={12} color={colors.blue} />
+                        <Text style={[styles.resourceLinkText, { color: colors.blue }]}>Search on YouTube →</Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -262,20 +262,20 @@ export default function ReportDetailScreen() {
             {bookResources.length > 0 && (
               <View style={styles.resourceGroup}>
                 <View style={styles.resourceGroupHeader}>
-                  <BookOpen size={16} color={Colors.orange} />
-                  <Text style={styles.resourceGroupTitle}>Books</Text>
+                  <BookOpen size={16} color={colors.orange} />
+                  <Text style={[styles.resourceGroupTitle, { color: colors.text }]}>Books</Text>
                 </View>
                 {bookResources.map((res: any, i: number) => {
                   const title = res.title || res.name || '';
                   const bookUrl = res.url || `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=stripbooks`;
                   return (
-                    <TouchableOpacity key={`bk-${i}`} style={styles.resourceItem} onPress={() => openUrl(bookUrl)} activeOpacity={0.7}>
-                      <Text style={styles.resourceItemTitle}>{title}</Text>
-                      {res.author && <Text style={styles.resourceAuthor}>by {res.author}</Text>}
-                      {res.description && <Text style={styles.resourceItemDesc}>{res.description}</Text>}
+                    <TouchableOpacity key={`bk-${i}`} style={[styles.resourceItem, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(bookUrl)} activeOpacity={0.7}>
+                      <Text style={[styles.resourceItemTitle, { color: colors.text }]}>{title}</Text>
+                      {res.author && <Text style={[styles.resourceAuthor, { color: colors.muted }]}>by {res.author}</Text>}
+                      {res.description && <Text style={[styles.resourceItemDesc, { color: colors.soft }]}>{res.description}</Text>}
                       <View style={styles.resourceLink}>
-                        <ExternalLink size={12} color={Colors.orange} />
-                        <Text style={[styles.resourceLinkText, { color: Colors.orange }]}>Buy on Amazon →</Text>
+                        <ExternalLink size={12} color={colors.orange} />
+                        <Text style={[styles.resourceLinkText, { color: colors.orange }]}>Buy on Amazon →</Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -286,21 +286,21 @@ export default function ReportDetailScreen() {
             {podcastResources.length > 0 && (
               <View style={styles.resourceGroup}>
                 <View style={styles.resourceGroupHeader}>
-                  <Headphones size={16} color={Colors.green} />
-                  <Text style={styles.resourceGroupTitle}>Podcasts</Text>
+                  <Headphones size={16} color={colors.green} />
+                  <Text style={[styles.resourceGroupTitle, { color: colors.text }]}>Podcasts</Text>
                 </View>
                 {podcastResources.map((res: any, i: number) => {
                   const title = res.title || res.name || '';
                   const show = res.show || res.showName || '';
                   const spotifyUrl = res.url || `https://open.spotify.com/search/${encodeURIComponent(show + ' ' + title)}`;
                   return (
-                    <TouchableOpacity key={`pd-${i}`} style={styles.resourceItem} onPress={() => openUrl(spotifyUrl)} activeOpacity={0.7}>
-                      <Text style={styles.resourceItemTitle}>{title}</Text>
-                      {show ? <Text style={styles.resourceAuthor}>{show}</Text> : null}
-                      {res.description && <Text style={styles.resourceItemDesc}>{res.description}</Text>}
+                    <TouchableOpacity key={`pd-${i}`} style={[styles.resourceItem, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(spotifyUrl)} activeOpacity={0.7}>
+                      <Text style={[styles.resourceItemTitle, { color: colors.text }]}>{title}</Text>
+                      {show ? <Text style={[styles.resourceAuthor, { color: colors.muted }]}>{show}</Text> : null}
+                      {res.description && <Text style={[styles.resourceItemDesc, { color: colors.soft }]}>{res.description}</Text>}
                       <View style={styles.resourceLink}>
-                        <ExternalLink size={12} color={Colors.green} />
-                        <Text style={[styles.resourceLinkText, { color: Colors.green }]}>Listen on Spotify →</Text>
+                        <ExternalLink size={12} color={colors.green} />
+                        <Text style={[styles.resourceLinkText, { color: colors.green }]}>Listen on Spotify →</Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -316,81 +316,76 @@ export default function ReportDetailScreen() {
   );
 }
 
-function MetaRow({ label, value }: { label: string; value: string }) {
+function MetaRow({ label, value, colors }: { label: string; value: string; colors: any }) {
   return (
-    <View style={mrStyles.row}>
-      <Text style={mrStyles.label}>{label}</Text>
-      <Text style={mrStyles.value}>{value}</Text>
+    <View style={[mrStyles.row, { borderBottomColor: colors.border }]}>
+      <Text style={[mrStyles.label, { color: colors.muted }]}>{label}</Text>
+      <Text style={[mrStyles.value, { color: colors.text }]}>{value}</Text>
     </View>
   );
 }
 
 const mrStyles = StyleSheet.create({
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  label: { fontSize: 13, color: Colors.muted },
-  value: { fontSize: 13, fontWeight: '600' as const, color: Colors.text, textTransform: 'capitalize' as const },
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1 },
+  label: { fontSize: 13 },
+  value: { fontSize: 13, fontWeight: '600' as const, textTransform: 'capitalize' as const },
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 16 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { color: Colors.muted, fontSize: 14 },
+  emptyText: { fontSize: 14 },
   scoreSection: { alignItems: 'center', marginBottom: 20 },
   scoreCircle: { width: 100, height: 100, borderRadius: 50, borderWidth: 4, justifyContent: 'center', alignItems: 'center' },
   scoreNum: { fontSize: 36, fontWeight: '900' as const },
-  scoreOf: { fontSize: 14, color: Colors.muted },
+  scoreOf: { fontSize: 14 },
   statPillsRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
   statPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.card,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
-  statPillLabel: { fontSize: 11, color: Colors.muted, fontWeight: '500' as const },
-  statPillValue: { fontSize: 13, color: Colors.text, fontWeight: '700' as const },
-  metaCard: { backgroundColor: Colors.card, borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: Colors.border },
-  section: { backgroundColor: Colors.card, borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: Colors.border },
-  sectionTitle: { fontSize: 15, fontWeight: '700' as const, color: Colors.text, marginBottom: 8 },
+  statPillLabel: { fontSize: 11, fontWeight: '500' as const },
+  statPillValue: { fontSize: 13, fontWeight: '700' as const },
+  metaCard: { borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1 },
+  section: { borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1 },
+  sectionTitle: { fontSize: 15, fontWeight: '700' as const, marginBottom: 8 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   ngIcon: { fontSize: 18 },
-  sectionBody: { fontSize: 13, color: Colors.soft, lineHeight: 20 },
-  verdictText: { fontSize: 14, color: Colors.soft, lineHeight: 20 },
-  listItem: { fontSize: 13, color: Colors.soft, marginBottom: 4, lineHeight: 18 },
+  sectionBody: { fontSize: 13, lineHeight: 20 },
+  verdictText: { fontSize: 14, lineHeight: 20 },
+  listItem: { fontSize: 13, marginBottom: 4, lineHeight: 18 },
   skillRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8 },
-  skillLabel: { fontSize: 12, color: Colors.soft, width: 110 },
-  skillBar: { flex: 1, height: 8, backgroundColor: Colors.border, borderRadius: 4, overflow: 'hidden' as const },
+  skillLabel: { fontSize: 12, width: 110 },
+  skillBar: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' as const },
   skillFill: { height: '100%' as const, borderRadius: 4 },
   skillVal: { fontSize: 12, fontWeight: '700' as const, minWidth: 24, textAlign: 'right' as const },
-  scriptText: { fontSize: 13, color: Colors.soft, lineHeight: 20, fontStyle: 'italic' as const },
-  criticalCard: { borderLeftWidth: 3, borderLeftColor: Colors.yellow },
-  memorizeCard: { borderLeftWidth: 3, borderLeftColor: Colors.green },
-  memorizeText: { fontSize: 13, color: Colors.soft, lineHeight: 22, fontStyle: 'italic' as const },
+  criticalCard: { borderLeftWidth: 3 },
+  memorizeCard: { borderLeftWidth: 3 },
+  memorizeText: { fontSize: 13, lineHeight: 22, fontStyle: 'italic' as const },
   resourceGroup: { marginBottom: 16 },
   resourceGroupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  resourceGroupTitle: { fontSize: 14, fontWeight: '700' as const, color: Colors.text },
+  resourceGroupTitle: { fontSize: 14, fontWeight: '700' as const },
   resourceItem: {
-    backgroundColor: Colors.background,
     borderRadius: 10,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
-  resourceItemTitle: { fontSize: 13, fontWeight: '600' as const, color: Colors.text, marginBottom: 2 },
-  resourceAuthor: { fontSize: 11, color: Colors.muted, marginBottom: 4 },
-  resourceItemDesc: { fontSize: 12, color: Colors.soft, lineHeight: 17, marginBottom: 6 },
+  resourceItemTitle: { fontSize: 13, fontWeight: '600' as const, marginBottom: 2 },
+  resourceAuthor: { fontSize: 11, marginBottom: 4 },
+  resourceItemDesc: { fontSize: 12, lineHeight: 17, marginBottom: 6 },
   resourceLink: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     marginTop: 4,
   },
-  resourceLinkText: { fontSize: 12, fontWeight: '600' as const, color: Colors.blue },
+  resourceLinkText: { fontSize: 12, fontWeight: '600' as const },
 });

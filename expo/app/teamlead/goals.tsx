@@ -7,8 +7,8 @@ import { ChevronDown } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
+import { ThemeColors } from '@/constants/colors';
 import { useGoals, useTeamMembers, useTeamName, useLogs } from '@/hooks/useData';
 import { getCurrentMonth, getMonthLabel } from '@/utils/date';
 import { submitGoal, deleteGoal } from '@/services/api';
@@ -125,8 +125,8 @@ export default function TeamLeadGoalsScreen() {
 
           {goalsLoading && (
             <View style={{ padding: 20, alignItems: 'center' as const }}>
-              <ActivityIndicator color={Colors.orange} />
-              <Text style={{ color: Colors.muted, marginTop: 8, fontSize: 13 }}>Loading goals...</Text>
+              <ActivityIndicator color={colors.orange} />
+              <Text style={{ color: colors.muted, marginTop: 8, fontSize: 13 }}>Loading goals...</Text>
             </View>
           )}
 
@@ -137,71 +137,71 @@ export default function TeamLeadGoalsScreen() {
           )}
 
           {!goalsLoading && !goalsError && allGoals && allGoals.length === 0 && (
-            <View style={{ padding: 16, backgroundColor: Colors.card, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: Colors.border }}>
-              <Text style={{ color: Colors.muted, fontSize: 13, textAlign: 'center' as const }}>No goals found in database</Text>
+            <View style={{ padding: 16, backgroundColor: colors.card, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ color: colors.muted, fontSize: 13, textAlign: 'center' as const }}>No goals found in database</Text>
             </View>
           )}
 
           {!goalsLoading && allGoals && allGoals.length > 0 && companyGoals.length === 0 && teamGoals.length === 0 && memberGoals.length === 0 && (
-            <View style={{ padding: 16, backgroundColor: Colors.card, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: Colors.border }}>
-              <Text style={{ color: Colors.muted, fontSize: 13, textAlign: 'center' as const }}>{allGoals.length} goals fetched but none matched filters. Check console logs.</Text>
+            <View style={{ padding: 16, backgroundColor: colors.card, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ color: colors.muted, fontSize: 13, textAlign: 'center' as const }}>{allGoals.length} goals fetched but none matched filters. Check console logs.</Text>
             </View>
           )}
 
           {companyGoals.length > 0 && (
             <View style={styles.section}>
-              <Text style={[styles.sectionLabel, { color: Colors.orange }]}>🏢 Company Target</Text>
-              {companyGoals.map(g => <GoalCard key={g.id} goal={g} progress={getProgress(g)} />)}
+              <Text style={[styles.sectionLabel, { color: colors.orange }]}>🏢 Company Target</Text>
+              {companyGoals.map(g => <GoalCard key={g.id} goal={g} progress={getProgress(g)} colors={colors} />)}
             </View>
           )}
 
           {teamGoals.length > 0 && (
             <View style={styles.section}>
-              <Text style={[styles.sectionLabel, { color: Colors.blue }]}>👥 Team Goals — {teamName}</Text>
-              {teamGoals.map(g => <GoalCard key={g.id} goal={g} progress={getProgress(g)} onRemove={() => removeMutation.mutate(g.id)} />)}
+              <Text style={[styles.sectionLabel, { color: colors.blue }]}>👥 Team Goals — {teamName}</Text>
+              {teamGoals.map(g => <GoalCard key={g.id} goal={g} progress={getProgress(g)} onRemove={() => removeMutation.mutate(g.id)} colors={colors} />)}
             </View>
           )}
 
           {memberGoals.length > 0 && (
             <View style={styles.section}>
-              <Text style={[styles.sectionLabel, { color: Colors.purple }]}>👤 Individual Member Goals</Text>
+              <Text style={[styles.sectionLabel, { color: colors.purple }]}>👤 Individual Member Goals</Text>
               {memberGoals.map(g => {
                 const member = teamMembers.find(m => m.id === g.userId);
                 return (
-                  <GoalCard key={g.id} goal={g} progress={getProgress(g)} memberName={member?.name} onRemove={() => removeMutation.mutate(g.id)} />
+                  <GoalCard key={g.id} goal={g} progress={getProgress(g)} memberName={member?.name} onRemove={() => removeMutation.mutate(g.id)} colors={colors} />
                 );
               })}
             </View>
           )}
 
-          <View style={styles.formCard}>
-            <Text style={[styles.formTitle, { color: Colors.orange }]}>+ Set New Goal</Text>
+          <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.formTitle, { color: colors.orange }]}>+ Set New Goal</Text>
 
-            <Text style={styles.label}>SELECT STAFF MEMBER</Text>
+            <Text style={[styles.label, { color: colors.muted }]}>SELECT STAFF MEMBER</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
               {teamMembers.map(m => (
                 <TouchableOpacity
                   key={m.id}
-                  style={[styles.memberPill, selectedMember === m.id && styles.memberPillActive]}
+                  style={[styles.memberPill, { backgroundColor: colors.background, borderColor: colors.border }, selectedMember === m.id && { backgroundColor: colors.green, borderColor: colors.green }]}
                   onPress={() => setSelectedMember(m.id)}
                 >
-                  <Text style={[styles.memberPillText, selectedMember === m.id && { color: '#fff' }]}>
+                  <Text style={[styles.memberPillText, { color: colors.soft }, selectedMember === m.id && { color: '#fff' }]}>
                     {m.name}
                   </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
 
-            <Text style={styles.label}>GOAL TYPE</Text>
-            <TouchableOpacity style={styles.dropdown} onPress={() => setShowTypeDropdown(!showTypeDropdown)}>
-              <Text style={styles.dropdownText}>{GOAL_TYPES.find(t => t.key === goalType)?.label}</Text>
-              <ChevronDown size={16} color={Colors.muted} />
+            <Text style={[styles.label, { color: colors.muted }]}>GOAL TYPE</Text>
+            <TouchableOpacity style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => setShowTypeDropdown(!showTypeDropdown)}>
+              <Text style={[styles.dropdownText, { color: colors.text }]}>{GOAL_TYPES.find(t => t.key === goalType)?.label}</Text>
+              <ChevronDown size={16} color={colors.muted} />
             </TouchableOpacity>
             {showTypeDropdown && (
-              <View style={styles.dropdownList}>
+              <View style={[styles.dropdownList, { backgroundColor: colors.cardHover }]}>
                 {GOAL_TYPES.map(t => (
-                  <TouchableOpacity key={t.key} style={styles.dropdownItem} onPress={() => { setGoalType(t.key); setShowTypeDropdown(false); }}>
-                    <Text style={styles.dropdownItemText}>{t.label}</Text>
+                  <TouchableOpacity key={t.key} style={[styles.dropdownItem, { borderBottomColor: colors.border }]} onPress={() => { setGoalType(t.key); setShowTypeDropdown(false); }}>
+                    <Text style={[styles.dropdownItemText, { color: colors.text }]}>{t.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -209,15 +209,15 @@ export default function TeamLeadGoalsScreen() {
 
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.label}>TARGET NUMBER</Text>
-                <TextInput style={styles.input} value={target} onChangeText={t => setTarget(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" placeholder="e.g. 50" placeholderTextColor={Colors.muted} />
+                <Text style={[styles.label, { color: colors.muted }]}>TARGET NUMBER</Text>
+                <TextInput style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} value={target} onChangeText={t => setTarget(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" placeholder="e.g. 50" placeholderTextColor={colors.muted} />
               </View>
             </View>
 
-            <Text style={styles.label}>GOAL LABEL</Text>
-            <TextInput style={styles.input} value={label} onChangeText={setLabel} placeholder="e.g. Deliver 50 orders this month" placeholderTextColor={Colors.muted} />
+            <Text style={[styles.label, { color: colors.muted }]}>GOAL LABEL</Text>
+            <TextInput style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} value={label} onChangeText={setLabel} placeholder="e.g. Deliver 50 orders this month" placeholderTextColor={colors.muted} />
 
-            <TouchableOpacity style={styles.setBtn} onPress={() => saveMutation.mutate()} disabled={saveMutation.isPending} activeOpacity={0.8}>
+            <TouchableOpacity style={[styles.setBtn, { backgroundColor: colors.orange }]} onPress={() => saveMutation.mutate()} disabled={saveMutation.isPending} activeOpacity={0.8}>
               {saveMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.setBtnText}>🎯 Set Goal</Text>}
             </TouchableOpacity>
           </View>
@@ -229,71 +229,70 @@ export default function TeamLeadGoalsScreen() {
   );
 }
 
-function GoalCard({ goal, progress, memberName, onRemove }: { goal: any; progress: number; memberName?: string; onRemove?: () => void }) {
+function GoalCard({ goal, progress, memberName, onRemove, colors }: { goal: any; progress: number; memberName?: string; onRemove?: () => void; colors: ThemeColors }) {
   const pct = goal.target > 0 ? Math.min(Math.round((progress / goal.target) * 100), 100) : 0;
   return (
-    <View style={gcStyles.card}>
+    <View style={[gcStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={gcStyles.header}>
         <View style={{ flex: 1 }}>
-          <Text style={gcStyles.label}>{goal.label}</Text>
-          {memberName && <Text style={gcStyles.member}>{memberName}</Text>}
+          <Text style={[gcStyles.label, { color: colors.text }]}>{goal.label}</Text>
+          {memberName && <Text style={[gcStyles.member, { color: colors.muted }]}>{memberName}</Text>}
         </View>
         {onRemove && (
           <TouchableOpacity onPress={onRemove}>
-            <Text style={gcStyles.remove}>✕ Remove</Text>
+            <Text style={[gcStyles.remove, { color: colors.red }]}>✕ Remove</Text>
           </TouchableOpacity>
         )}
       </View>
       <View style={gcStyles.progressRow}>
-        <Text style={gcStyles.progressLabel}>{goal.label}</Text>
-        <Text style={gcStyles.progressValue}>
-          <Text style={{ color: Colors.orange }}>{progress}</Text> / {goal.target}
+        <Text style={[gcStyles.progressLabel, { color: colors.soft }]}>{goal.label}</Text>
+        <Text style={[gcStyles.progressValue, { color: colors.soft }]}>
+          <Text style={{ color: colors.orange }}>{progress}</Text> / {goal.target}
         </Text>
       </View>
-      <View style={gcStyles.bar}>
-        <View style={[gcStyles.fill, { width: `${pct}%` }]} />
+      <View style={[gcStyles.bar, { backgroundColor: colors.border }]}>
+        <View style={[gcStyles.fill, { width: `${pct}%`, backgroundColor: colors.orange }]} />
       </View>
-      <Text style={gcStyles.pct}>{pct}% complete · {Math.max(goal.target - progress, 0)} more to go</Text>
+      <Text style={[gcStyles.pct, { color: colors.muted }]}>{pct}% complete · {Math.max(goal.target - progress, 0)} more to go</Text>
     </View>
   );
 }
 
 const gcStyles = StyleSheet.create({
-  card: { backgroundColor: Colors.card, borderRadius: 10, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: Colors.border },
+  card: { borderRadius: 10, padding: 14, marginBottom: 8, borderWidth: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  label: { fontSize: 14, fontWeight: '700' as const, color: Colors.text },
-  member: { fontSize: 11, color: Colors.muted, marginTop: 2 },
-  remove: { color: Colors.red, fontSize: 12, fontWeight: '600' as const },
+  label: { fontSize: 14, fontWeight: '700' as const },
+  member: { fontSize: 11, marginTop: 2 },
+  remove: { fontSize: 12, fontWeight: '600' as const },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  progressLabel: { fontSize: 12, fontWeight: '600' as const, color: Colors.soft },
-  progressValue: { fontSize: 12, color: Colors.soft },
-  bar: { height: 6, backgroundColor: Colors.border, borderRadius: 3, overflow: 'hidden' as const },
-  fill: { height: '100%', backgroundColor: Colors.orange, borderRadius: 3 },
-  pct: { fontSize: 11, color: Colors.muted, marginTop: 4 },
+  progressLabel: { fontSize: 12, fontWeight: '600' as const },
+  progressValue: { fontSize: 12 },
+  bar: { height: 6, borderRadius: 3, overflow: 'hidden' as const },
+  fill: { height: '100%', borderRadius: 3 },
+  pct: { fontSize: 11, marginTop: 4 },
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   safeArea: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 16 },
-  title: { fontSize: 22, fontWeight: '800' as const, color: Colors.text },
-  subtitle: { fontSize: 13, color: Colors.muted, marginBottom: 16 },
+  title: { fontSize: 22, fontWeight: '800' as const },
+  subtitle: { fontSize: 13, marginBottom: 16 },
   section: { marginBottom: 20 },
   sectionLabel: { fontSize: 14, fontWeight: '700' as const, marginBottom: 8 },
-  formCard: { backgroundColor: Colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: Colors.border, marginTop: 10 },
+  formCard: { borderRadius: 16, padding: 18, borderWidth: 1, marginTop: 10 },
   formTitle: { fontSize: 16, fontWeight: '700' as const, marginBottom: 16 },
-  label: { fontSize: 10, fontWeight: '700' as const, color: Colors.muted, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 6 },
-  memberPill: { backgroundColor: Colors.background, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, borderWidth: 1, borderColor: Colors.border },
-  memberPillActive: { backgroundColor: Colors.green, borderColor: Colors.green },
-  memberPillText: { fontSize: 12, color: Colors.soft },
-  dropdown: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: Colors.background, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: Colors.border, marginBottom: 12 },
-  dropdownText: { color: Colors.text, fontSize: 14 },
-  dropdownList: { backgroundColor: Colors.cardHover, borderRadius: 8, marginBottom: 12 },
-  dropdownItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  dropdownItemText: { color: Colors.text, fontSize: 14 },
+  label: { fontSize: 10, fontWeight: '700' as const, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 6 },
+  memberPill: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, borderWidth: 1 },
+  memberPillText: { fontSize: 12 },
+  dropdown: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderRadius: 10, padding: 12, borderWidth: 1, marginBottom: 12 },
+  dropdownText: { fontSize: 14 },
+  dropdownList: { borderRadius: 8, marginBottom: 12 },
+  dropdownItem: { padding: 12, borderBottomWidth: 1 },
+  dropdownItemText: { fontSize: 14 },
   row: { flexDirection: 'row', gap: 12 },
-  input: { backgroundColor: Colors.background, borderRadius: 10, padding: 12, color: Colors.text, fontSize: 14, borderWidth: 1, borderColor: Colors.border, marginBottom: 12 },
-  setBtn: { backgroundColor: Colors.orange, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
+  input: { borderRadius: 10, padding: 12, fontSize: 14, borderWidth: 1, marginBottom: 12 },
+  setBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
   setBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' as const },
 });

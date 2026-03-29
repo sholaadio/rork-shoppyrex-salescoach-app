@@ -7,7 +7,6 @@ import { ChevronDown } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
 import { useNoAnswers } from '@/hooks/useData';
 import { submitNoAnswer } from '@/services/api';
@@ -61,61 +60,61 @@ export default function NoAnswerScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: 'No Answer', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>📵 Log No-Answer</Text>
+        <Text style={[styles.title, { color: colors.text }]}>📵 Log No-Answer</Text>
 
-        <View style={styles.formCard}>
+        <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>ORDER ID</Text>
-              <TextInput style={styles.input} placeholder="e.g. ORD-4821" placeholderTextColor={Colors.muted} value={orderId} onChangeText={setOrderId} />
+              <Text style={[styles.label, { color: colors.muted }]}>ORDER ID</Text>
+              <TextInput style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} placeholder="e.g. ORD-4821" placeholderTextColor={colors.muted} value={orderId} onChangeText={setOrderId} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>CUSTOMER NAME</Text>
-              <TextInput style={styles.input} placeholder="Customer name" placeholderTextColor={Colors.muted} value={customerName} onChangeText={setCustomerName} />
+              <Text style={[styles.label, { color: colors.muted }]}>CUSTOMER NAME</Text>
+              <TextInput style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} placeholder="Customer name" placeholderTextColor={colors.muted} value={customerName} onChangeText={setCustomerName} />
             </View>
           </View>
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>REASON</Text>
-              <TouchableOpacity style={styles.dropdown} onPress={() => setShowReasonDD(!showReasonDD)}>
-                <Text style={styles.ddText}>{reason}</Text>
-                <ChevronDown size={16} color={Colors.muted} />
+              <Text style={[styles.label, { color: colors.muted }]}>REASON</Text>
+              <TouchableOpacity style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => setShowReasonDD(!showReasonDD)}>
+                <Text style={[styles.ddText, { color: colors.text }]}>{reason}</Text>
+                <ChevronDown size={16} color={colors.muted} />
               </TouchableOpacity>
               {showReasonDD && (
-                <View style={styles.ddList}>
+                <View style={[styles.ddList, { backgroundColor: colors.cardHover }]}>
                   {REASONS.map(r => (
-                    <TouchableOpacity key={r} style={styles.ddItem} onPress={() => { setReason(r); setShowReasonDD(false); }}>
-                      <Text style={styles.ddItemText}>{r}</Text>
+                    <TouchableOpacity key={r} style={[styles.ddItem, { borderBottomColor: colors.border }]} onPress={() => { setReason(r); setShowReasonDD(false); }}>
+                      <Text style={[styles.ddItemText, { color: colors.text }]}>{r}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               )}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>ATTEMPTS</Text>
-              <TextInput style={styles.input} value={attempts} onChangeText={t => setAttempts(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" />
+              <Text style={[styles.label, { color: colors.muted }]}>ATTEMPTS</Text>
+              <TextInput style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]} value={attempts} onChangeText={t => setAttempts(t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" />
             </View>
           </View>
 
-          <Text style={styles.label}>NOTES</Text>
-          <TextInput style={[styles.input, { minHeight: 50, textAlignVertical: 'top' }]} placeholder="Additional notes..." placeholderTextColor={Colors.muted} value={notes} onChangeText={setNotes} multiline />
+          <Text style={[styles.label, { color: colors.muted }]}>NOTES</Text>
+          <TextInput style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border, minHeight: 50, textAlignVertical: 'top' }]} placeholder="Additional notes..." placeholderTextColor={colors.muted} value={notes} onChangeText={setNotes} multiline />
 
-          <TouchableOpacity style={styles.submitBtn} onPress={() => saveMutation.mutate()} disabled={saveMutation.isPending} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.submitBtn, { backgroundColor: colors.orange }]} onPress={() => saveMutation.mutate()} disabled={saveMutation.isPending} activeOpacity={0.8}>
             {saveMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Log No-Answer</Text>}
           </TouchableOpacity>
         </View>
 
         {myNoAnswers.length > 0 && (
           <View style={styles.historySection}>
-            <Text style={styles.historyTitle}>Recent No-Answer Logs</Text>
+            <Text style={[styles.historyTitle, { color: colors.text }]}>Recent No-Answer Logs</Text>
             {myNoAnswers.map(na => (
-              <View key={na.id} style={styles.historyCard}>
+              <View key={na.id} style={[styles.historyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <View style={styles.historyRow}>
-                  <Text style={styles.historyOrder}>{na.orderId || na.customerName}</Text>
-                  <Text style={styles.historyDate}>{formatTimestamp(na.date)}</Text>
+                  <Text style={[styles.historyOrder, { color: colors.text }]}>{na.orderId || na.customerName}</Text>
+                  <Text style={[styles.historyDate, { color: colors.muted }]}>{formatTimestamp(na.date)}</Text>
                 </View>
-                <Text style={styles.historyReason}>{na.reason} · {na.attempts} attempt(s)</Text>
+                <Text style={[styles.historyReason, { color: colors.soft }]}>{na.reason} · {na.attempts} attempt(s)</Text>
               </View>
             ))}
           </View>
@@ -128,26 +127,26 @@ export default function NoAnswerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 16 },
-  title: { fontSize: 22, fontWeight: '800' as const, color: Colors.text, marginBottom: 16 },
-  formCard: { backgroundColor: Colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: Colors.border },
+  title: { fontSize: 22, fontWeight: '800' as const, marginBottom: 16 },
+  formCard: { borderRadius: 16, padding: 18, borderWidth: 1 },
   row: { flexDirection: 'row', gap: 12 },
-  label: { fontSize: 10, fontWeight: '700' as const, color: Colors.muted, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 6 },
-  input: { backgroundColor: Colors.background, borderRadius: 10, padding: 12, color: Colors.text, fontSize: 14, borderWidth: 1, borderColor: Colors.border, marginBottom: 12 },
-  dropdown: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: Colors.background, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: Colors.border, marginBottom: 12 },
-  ddText: { color: Colors.text, fontSize: 14 },
-  ddList: { backgroundColor: Colors.cardHover, borderRadius: 8, marginBottom: 12 },
-  ddItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  ddItemText: { color: Colors.text, fontSize: 14 },
-  submitBtn: { backgroundColor: Colors.orange, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
+  label: { fontSize: 10, fontWeight: '700' as const, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 6 },
+  input: { borderRadius: 10, padding: 12, fontSize: 14, borderWidth: 1, marginBottom: 12 },
+  dropdown: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderRadius: 10, padding: 12, borderWidth: 1, marginBottom: 12 },
+  ddText: { fontSize: 14 },
+  ddList: { borderRadius: 8, marginBottom: 12 },
+  ddItem: { padding: 12, borderBottomWidth: 1 },
+  ddItemText: { fontSize: 14 },
+  submitBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
   submitText: { color: '#fff', fontSize: 15, fontWeight: '700' as const },
   historySection: { marginTop: 20 },
-  historyTitle: { fontSize: 16, fontWeight: '700' as const, color: Colors.text, marginBottom: 10 },
-  historyCard: { backgroundColor: Colors.card, borderRadius: 10, padding: 12, marginBottom: 6, borderWidth: 1, borderColor: Colors.border },
+  historyTitle: { fontSize: 16, fontWeight: '700' as const, marginBottom: 10 },
+  historyCard: { borderRadius: 10, padding: 12, marginBottom: 6, borderWidth: 1 },
   historyRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  historyOrder: { fontSize: 13, fontWeight: '600' as const, color: Colors.text },
-  historyDate: { fontSize: 11, color: Colors.muted },
-  historyReason: { fontSize: 12, color: Colors.soft },
+  historyOrder: { fontSize: 13, fontWeight: '600' as const },
+  historyDate: { fontSize: 11 },
+  historyReason: { fontSize: 12 },
 });

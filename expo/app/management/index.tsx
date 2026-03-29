@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, getScoreColor } from '@/constants/colors';
+import { getScoreColor } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
 import { Period } from '@/types';
 import { useUsersArray, useTeamsArray, useLogs, useReports } from '@/hooks/useData';
@@ -68,19 +68,19 @@ export default function ManagementOverview() {
           refreshControl={<RefreshControl refreshing={r1 || r2} onRefresh={onRefresh} tintColor={colors.green} />}
         >
           <Text style={[styles.title, { color: colors.text }]}>Company Overview</Text>
-          <Text style={styles.subtitle}>Shoppyrex · {allTeams.length} teams · {closersAndLeads} closers & leads</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>Shoppyrex · {allTeams.length} teams · {closersAndLeads} closers & leads</Text>
 
           <PeriodFilter selected={period} onSelect={setPeriod} />
 
           <View style={styles.statsRow}>
-            <StatCard label="CALLS ANALYZED" value={String(periodReports.length)} accentColor={Colors.green} />
+            <StatCard label="CALLS ANALYZED" value={String(periodReports.length)} accentColor={colors.green} />
             <View style={{ width: 8 }} />
-            <StatCard label="COMMISSION TO BE PAID" value={formatNaira(totalCommission)} accentColor={Colors.orange} subtitle="Paid with salary" />
+            <StatCard label="COMMISSION TO BE PAID" value={formatNaira(totalCommission)} accentColor={colors.orange} subtitle="Paid with salary" />
           </View>
           <View style={[styles.statsRow, { marginTop: 8, marginBottom: 20 }]}>
-            <StatCard label="EXCELLENCE POOL (90%+)" value={String(excellenceCount)} accentColor={Colors.yellow} />
+            <StatCard label="EXCELLENCE POOL (90%+)" value={String(excellenceCount)} accentColor={colors.yellow} />
             <View style={{ width: 8 }} />
-            <StatCard label="RED FLAGS THIS WEEK" value={String(redFlags)} accentColor={Colors.red} />
+            <StatCard label="RED FLAGS THIS WEEK" value={String(redFlags)} accentColor={colors.red} />
           </View>
 
           {allTeams.map(team => {
@@ -91,24 +91,24 @@ export default function ManagementOverview() {
               ? Math.round(teamReports.reduce((s, r) => s + (r.score || 0), 0) / teamReports.length) : 0;
             const totalPay = teamLogs.reduce((s, l) => s + (l.commission?.total ?? 0), 0);
 
-            const teamColor = team.type === 'sales' ? Colors.green
-              : team.type === 'followup' ? Colors.blue : Colors.purple;
+            const teamColor = team.type === 'sales' ? colors.green
+              : team.type === 'followup' ? colors.blue : colors.purple;
 
             return (
-              <View key={team.id} style={[styles.teamCard, { borderTopColor: teamColor }]}>
+              <View key={team.id} style={[styles.teamCard, { backgroundColor: colors.card, borderColor: colors.border, borderTopColor: teamColor }]}>
                 <View style={styles.teamHeader}>
-                  <Text style={styles.teamName}>{team.name}</Text>
+                  <Text style={[styles.teamName, { color: colors.text }]}>{team.name}</Text>
                   <View style={styles.teamScoreSection}>
-                    <Text style={styles.teamScoreLabel}>Avg Score</Text>
+                    <Text style={[styles.teamScoreLabel, { color: colors.muted }]}>Avg Score</Text>
                     {teamReports.length > 0 ? (
-                      <Text style={[styles.teamScore, { color: getScoreColor(avgScore) }]}>{avgScore}</Text>
+                      <Text style={[styles.teamScore, { color: getScoreColor(avgScore, colors) }]}>{avgScore}</Text>
                     ) : (
-                      <Text style={styles.teamScoreDash}>—</Text>
+                      <Text style={[styles.teamScoreDash, { color: colors.muted }]}>—</Text>
                     )}
                   </View>
                 </View>
-                <Text style={styles.teamMeta}>{members.length} members · {teamReports.length} calls</Text>
-                <Text style={[styles.teamPay, { color: totalPay > 0 ? Colors.green : Colors.red }]}>
+                <Text style={[styles.teamMeta, { color: colors.muted }]}>{members.length} members · {teamReports.length} calls</Text>
+                <Text style={[styles.teamPay, { color: totalPay > 0 ? colors.green : colors.red }]}>
                   To be paid: {totalPay > 0 ? formatNaira(totalPay) : '₦0'}
                   {team.type === 'socialmedia' ? ' (pool)' : ''}
                 </Text>
@@ -124,23 +124,23 @@ export default function ManagementOverview() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   safeArea: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 16 },
-  title: { fontSize: 22, fontWeight: '800' as const, color: Colors.text },
-  subtitle: { fontSize: 13, color: Colors.muted, marginBottom: 16 },
+  title: { fontSize: 22, fontWeight: '800' as const },
+  subtitle: { fontSize: 13, marginBottom: 16 },
   statsRow: { flexDirection: 'row' },
   teamCard: {
-    backgroundColor: Colors.card, borderRadius: 12, padding: 16, marginBottom: 10,
-    borderWidth: 1, borderColor: Colors.border, borderTopWidth: 3,
+    borderRadius: 12, padding: 16, marginBottom: 10,
+    borderWidth: 1, borderTopWidth: 3,
   },
   teamHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 },
-  teamName: { fontSize: 16, fontWeight: '700' as const, color: Colors.text },
+  teamName: { fontSize: 16, fontWeight: '700' as const },
   teamScoreSection: { alignItems: 'flex-end' },
-  teamScoreLabel: { fontSize: 10, color: Colors.muted, textTransform: 'uppercase' as const },
+  teamScoreLabel: { fontSize: 10, textTransform: 'uppercase' as const },
   teamScore: { fontSize: 20, fontWeight: '800' as const },
-  teamScoreDash: { fontSize: 20, fontWeight: '800' as const, color: Colors.muted },
-  teamMeta: { fontSize: 12, color: Colors.muted, marginBottom: 4 },
+  teamScoreDash: { fontSize: 20, fontWeight: '800' as const },
+  teamMeta: { fontSize: 12, marginBottom: 4 },
   teamPay: { fontSize: 13, fontWeight: '700' as const },
 });

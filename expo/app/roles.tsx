@@ -8,7 +8,6 @@ import { ShieldCheck, KeyRound, Search } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
 import { getInitials, getRoleLabel, getRoleBadgeColor } from '@/types';
 import { useUsersArray } from '@/hooks/useData';
@@ -42,8 +41,7 @@ export default function RolesScreen() {
     onSuccess: () => {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Success', 'PIN has been reset');
-      setResetUserId('');
-      setNewPin('');
+      setResetUserId(''); setNewPin('');
       void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (err) => Alert.alert('Error', err instanceof Error ? err.message : 'Failed'),
@@ -54,9 +52,9 @@ export default function RolesScreen() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Stack.Screen options={{ title: 'Roles & Permissions', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
         <View style={styles.restricted}>
-          <ShieldCheck size={48} color={Colors.muted} />
-          <Text style={styles.restrictedTitle}>Access Restricted</Text>
-          <Text style={styles.restrictedText}>Only CEO and GM can manage roles and reset PINs</Text>
+          <ShieldCheck size={48} color={colors.muted} />
+          <Text style={[styles.restrictedTitle, { color: colors.text }]}>Access Restricted</Text>
+          <Text style={[styles.restrictedText, { color: colors.muted }]}>Only CEO and GM can manage roles and reset PINs</Text>
         </View>
       </View>
     );
@@ -66,99 +64,98 @@ export default function RolesScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ title: 'Roles & Permissions', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>🔐 Roles & Permissions</Text>
-        <Text style={styles.subtitle}>Reset PINs and manage staff access</Text>
+        <Text style={[styles.title, { color: colors.text }]}>🔐 Roles & Permissions</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>Reset PINs and manage staff access</Text>
 
         {resetUserId !== '' && (
-          <View style={styles.resetCard}>
+          <View style={[styles.resetCard, { backgroundColor: colors.card, borderColor: colors.orange }]}>
             <View style={styles.resetHeader}>
-              <KeyRound size={20} color={Colors.orange} />
-              <Text style={styles.resetTitle}>Reset PIN</Text>
+              <KeyRound size={20} color={colors.orange} />
+              <Text style={[styles.resetTitle, { color: colors.orange }]}>Reset PIN</Text>
             </View>
-            <Text style={styles.resetFor}>
+            <Text style={[styles.resetFor, { color: colors.soft }]}>
               For: {allUsers.find(u => u.id === resetUserId)?.name ?? ''}
             </Text>
-            <Text style={styles.label}>NEW 4-DIGIT PIN</Text>
+            <Text style={[styles.label, { color: colors.muted }]}>NEW 4-DIGIT PIN</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
               placeholder="Enter new PIN"
-              placeholderTextColor={Colors.muted}
+              placeholderTextColor={colors.muted}
               value={newPin}
               onChangeText={t => setNewPin(t.replace(/[^0-9]/g, '').slice(0, 4))}
               keyboardType="number-pad"
               maxLength={4}
             />
             <View style={styles.resetActions}>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: Colors.muted }]} onPress={() => { setResetUserId(''); setNewPin(''); }}>
+              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.muted }]} onPress={() => { setResetUserId(''); setNewPin(''); }}>
                 <Text style={styles.actionText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: Colors.orange }]} onPress={() => resetMutation.mutate()} disabled={resetMutation.isPending}>
+              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.orange }]} onPress={() => resetMutation.mutate()} disabled={resetMutation.isPending}>
                 {resetMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.actionText}>Reset PIN</Text>}
               </TouchableOpacity>
             </View>
           </View>
         )}
 
-        <View style={styles.searchRow}>
-          <Search size={16} color={Colors.muted} />
+        <View style={[styles.searchRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Search size={16} color={colors.muted} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search staff..."
-            placeholderTextColor={Colors.muted}
+            placeholderTextColor={colors.muted}
             value={search}
             onChangeText={setSearch}
           />
         </View>
 
-        <View style={styles.permCard}>
-          <Text style={styles.permTitle}>Permission Matrix</Text>
-          <View style={styles.permRow}>
-            <Text style={styles.permRole}>CEO / GM</Text>
-            <Text style={styles.permDesc}>Full access · Set all goals · Manage staff · Reset PINs</Text>
+        <View style={[styles.permCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.permTitle, { color: colors.text }]}>Permission Matrix</Text>
+          <View style={[styles.permRow, { borderTopColor: colors.border }]}>
+            <Text style={[styles.permRole, { color: colors.green }]}>CEO / GM</Text>
+            <Text style={[styles.permDesc, { color: colors.soft }]}>Full access · Set all goals · Manage staff · Reset PINs</Text>
           </View>
-          <View style={styles.permRow}>
-            <Text style={styles.permRole}>Head of Sales</Text>
-            <Text style={styles.permDesc}>Set team & individual goals · View all data</Text>
+          <View style={[styles.permRow, { borderTopColor: colors.border }]}>
+            <Text style={[styles.permRole, { color: colors.green }]}>Head of Sales</Text>
+            <Text style={[styles.permDesc, { color: colors.soft }]}>Set team & individual goals · View all data</Text>
           </View>
-          <View style={styles.permRow}>
-            <Text style={styles.permRole}>Head Creative / HR</Text>
-            <Text style={styles.permDesc}>View only · No goal setting</Text>
+          <View style={[styles.permRow, { borderTopColor: colors.border }]}>
+            <Text style={[styles.permRole, { color: colors.green }]}>Head Creative / HR</Text>
+            <Text style={[styles.permDesc, { color: colors.soft }]}>View only · No goal setting</Text>
           </View>
-          <View style={styles.permRow}>
-            <Text style={styles.permRole}>Team Lead</Text>
-            <Text style={styles.permDesc}>Set individual goals for own team · Approve logs</Text>
+          <View style={[styles.permRow, { borderTopColor: colors.border }]}>
+            <Text style={[styles.permRole, { color: colors.green }]}>Team Lead</Text>
+            <Text style={[styles.permDesc, { color: colors.soft }]}>Set individual goals for own team · Approve logs</Text>
           </View>
-          <View style={styles.permRow}>
-            <Text style={styles.permRole}>Closer</Text>
-            <Text style={styles.permDesc}>Submit logs · Upload calls · View own data</Text>
+          <View style={[styles.permRow, { borderTopColor: colors.border }]}>
+            <Text style={[styles.permRole, { color: colors.green }]}>Closer</Text>
+            <Text style={[styles.permDesc, { color: colors.soft }]}>Submit logs · Upload calls · View own data</Text>
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>All Staff ({filteredUsers.length})</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>All Staff ({filteredUsers.length})</Text>
         {filteredUsers.map(u => (
-          <View key={u.id} style={styles.userRow}>
+          <View key={u.id} style={[styles.userRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={[styles.avatar, { backgroundColor: getRoleBadgeColor(u.role) }]}>
               <Text style={styles.avatarText}>{getInitials(u.name)}</Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{u.name}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>{u.name}</Text>
               <View style={styles.userMeta}>
                 <View style={[styles.roleBadge, { backgroundColor: getRoleBadgeColor(u.role) + '30' }]}>
                   <Text style={[styles.roleText, { color: getRoleBadgeColor(u.role) }]}>{getRoleLabel(u.role)}</Text>
                 </View>
-                <Text style={styles.empId}>{u.employeeId}</Text>
+                <Text style={[styles.empId, { color: colors.muted }]}>{u.employeeId}</Text>
               </View>
             </View>
             <TouchableOpacity
               style={styles.resetBtn}
               onPress={() => {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setResetUserId(u.id);
-                setNewPin('');
+                setResetUserId(u.id); setNewPin('');
               }}
             >
-              <KeyRound size={14} color={Colors.orange} />
-              <Text style={styles.resetBtnText}>Reset PIN</Text>
+              <KeyRound size={14} color={colors.orange} />
+              <Text style={[styles.resetBtnText, { color: colors.orange }]}>Reset PIN</Text>
             </TouchableOpacity>
           </View>
         ))}
@@ -170,43 +167,43 @@ export default function RolesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 16 },
   restricted: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12, padding: 40 },
-  restrictedTitle: { fontSize: 18, fontWeight: '700' as const, color: Colors.text },
-  restrictedText: { fontSize: 13, color: Colors.muted, textAlign: 'center' as const },
-  title: { fontSize: 22, fontWeight: '800' as const, color: Colors.text },
-  subtitle: { fontSize: 13, color: Colors.muted, marginBottom: 16 },
-  resetCard: { backgroundColor: Colors.card, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: Colors.orange, marginBottom: 16 },
+  restrictedTitle: { fontSize: 18, fontWeight: '700' as const },
+  restrictedText: { fontSize: 13, textAlign: 'center' as const },
+  title: { fontSize: 22, fontWeight: '800' as const },
+  subtitle: { fontSize: 13, marginBottom: 16 },
+  resetCard: { borderRadius: 16, padding: 18, borderWidth: 1, marginBottom: 16 },
   resetHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  resetTitle: { fontSize: 16, fontWeight: '700' as const, color: Colors.orange },
-  resetFor: { fontSize: 13, color: Colors.soft, marginBottom: 12 },
-  label: { fontSize: 10, fontWeight: '700' as const, color: Colors.muted, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 6 },
-  input: { backgroundColor: Colors.background, borderRadius: 10, padding: 12, color: Colors.text, fontSize: 16, borderWidth: 1, borderColor: Colors.border, marginBottom: 12, letterSpacing: 8, textAlign: 'center' as const, fontWeight: '700' as const },
+  resetTitle: { fontSize: 16, fontWeight: '700' as const },
+  resetFor: { fontSize: 13, marginBottom: 12 },
+  label: { fontSize: 10, fontWeight: '700' as const, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 6 },
+  input: { borderRadius: 10, padding: 12, fontSize: 16, borderWidth: 1, marginBottom: 12, letterSpacing: 8, textAlign: 'center' as const, fontWeight: '700' as const },
   resetActions: { flexDirection: 'row', gap: 10 },
   actionBtn: { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   actionText: { color: '#fff', fontWeight: '700' as const, fontSize: 14 },
-  searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, marginBottom: 16, borderWidth: 1, borderColor: Colors.border, gap: 8 },
-  searchInput: { flex: 1, paddingVertical: 12, color: Colors.text, fontSize: 14 },
-  permCard: { backgroundColor: Colors.card, borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: Colors.border },
-  permTitle: { fontSize: 14, fontWeight: '700' as const, color: Colors.text, marginBottom: 10 },
-  permRow: { paddingVertical: 8, borderTopWidth: 1, borderTopColor: Colors.border },
-  permRole: { fontSize: 13, fontWeight: '700' as const, color: Colors.green },
-  permDesc: { fontSize: 12, color: Colors.soft, marginTop: 2 },
-  sectionTitle: { fontSize: 15, fontWeight: '700' as const, color: Colors.text, marginBottom: 10 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, paddingHorizontal: 12, marginBottom: 16, borderWidth: 1, gap: 8 },
+  searchInput: { flex: 1, paddingVertical: 12, fontSize: 14 },
+  permCard: { borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1 },
+  permTitle: { fontSize: 14, fontWeight: '700' as const, marginBottom: 10 },
+  permRow: { paddingVertical: 8, borderTopWidth: 1 },
+  permRole: { fontSize: 13, fontWeight: '700' as const },
+  permDesc: { fontSize: 12, marginTop: 2 },
+  sectionTitle: { fontSize: 15, fontWeight: '700' as const, marginBottom: 10 },
   userRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderRadius: 10, padding: 12,
-    marginBottom: 6, borderWidth: 1, borderColor: Colors.border, gap: 10,
+    flexDirection: 'row', alignItems: 'center', borderRadius: 10, padding: 12,
+    marginBottom: 6, borderWidth: 1, gap: 10,
   },
   avatar: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#fff', fontWeight: '700' as const, fontSize: 12 },
   userInfo: { flex: 1 },
-  userName: { fontSize: 13, fontWeight: '600' as const, color: Colors.text },
+  userName: { fontSize: 13, fontWeight: '600' as const },
   userMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
   roleBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
   roleText: { fontSize: 9, fontWeight: '700' as const },
-  empId: { fontSize: 10, color: Colors.muted },
+  empId: { fontSize: 10 },
   resetBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(249,115,22,0.1)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
-  resetBtnText: { fontSize: 11, fontWeight: '600' as const, color: Colors.orange },
+  resetBtnText: { fontSize: 11, fontWeight: '600' as const },
 });

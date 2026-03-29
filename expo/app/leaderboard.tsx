@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Stack } from 'expo-router';
-import { Colors, getScoreColor, getRateColor } from '@/constants/colors';
+import { getScoreColor, getRateColor } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
 import { Period, getInitials, getRoleBadgeColor, getRoleLabel } from '@/types';
 import { useUsersArray, useTeamsArray, useLogs, useReports } from '@/hooks/useData';
@@ -64,48 +64,48 @@ export default function LeaderboardScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={r1 || r2} onRefresh={() => { void rl(); void rr(); }} tintColor={colors.green} />}
       >
-        <Text style={styles.title}>🏆 Leaderboard</Text>
+        <Text style={[styles.title, { color: colors.text }]}>🏆 Leaderboard</Text>
         <PeriodFilter selected={period} onSelect={setPeriod} />
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🏅 Team Rankings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>🏅 Team Rankings</Text>
           {teamRankings.map((item, i) => (
-            <View key={item.team.id} style={styles.rankCard}>
+            <View key={item.team.id} style={[styles.rankCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={styles.rank}>{getRankIcon(i)}</Text>
               <View style={styles.rankInfo}>
-                <Text style={styles.rankName}>{item.team.name}</Text>
-                <Text style={styles.rankMeta}>{item.members} members · {item.calls} calls</Text>
+                <Text style={[styles.rankName, { color: colors.text }]}>{item.team.name}</Text>
+                <Text style={[styles.rankMeta, { color: colors.muted }]}>{item.members} members · {item.calls} calls</Text>
               </View>
               <View style={styles.rankStats}>
-                <Text style={[styles.rankScore, { color: item.calls > 0 ? getScoreColor(item.avgScore) : Colors.muted }]}>
+                <Text style={[styles.rankScore, { color: item.calls > 0 ? getScoreColor(item.avgScore, colors) : colors.muted }]}>
                   {item.calls > 0 ? item.avgScore : '—'}
                 </Text>
-                <Text style={[styles.rankRate, { color: getRateColor(item.rate) }]}>{item.rate}%</Text>
-                <Text style={styles.rankEarnings}>{item.earnings > 0 ? formatNaira(item.earnings) : '₦0'}</Text>
+                <Text style={[styles.rankRate, { color: getRateColor(item.rate, colors) }]}>{item.rate}%</Text>
+                <Text style={[styles.rankEarnings, { color: colors.green }]}>{item.earnings > 0 ? formatNaira(item.earnings) : '₦0'}</Text>
               </View>
             </View>
           ))}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🏆 Individual Rankings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>🏆 Individual Rankings</Text>
           {individualRankings.map((item, i) => (
-            <View key={item.user.id} style={styles.rankCard}>
+            <View key={item.user.id} style={[styles.rankCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={styles.rank}>{getRankIcon(i)}</Text>
               <View style={[styles.indAvatar, { backgroundColor: getRoleBadgeColor(item.user.role) }]}>
                 <Text style={styles.indAvatarText}>{getInitials(item.user.name)}</Text>
               </View>
               <View style={styles.rankInfo}>
-                <Text style={styles.rankName}>{item.user.name}</Text>
+                <Text style={[styles.rankName, { color: colors.text }]}>{item.user.name}</Text>
                 <View style={[styles.roleBadge, { backgroundColor: getRoleBadgeColor(item.user.role) + '30' }]}>
                   <Text style={[styles.roleText, { color: getRoleBadgeColor(item.user.role) }]}>{getRoleLabel(item.user.role)}</Text>
                 </View>
               </View>
               <View style={styles.rankStats}>
-                <Text style={[styles.rankScore, { color: item.calls > 0 ? getScoreColor(item.avgScore) : Colors.muted }]}>
+                <Text style={[styles.rankScore, { color: item.calls > 0 ? getScoreColor(item.avgScore, colors) : colors.muted }]}>
                   {item.calls > 0 ? item.avgScore : '—'}
                 </Text>
-                <Text style={[styles.rankRate, { color: getRateColor(item.rate) }]}>{item.rate}%</Text>
+                <Text style={[styles.rankRate, { color: getRateColor(item.rate, colors) }]}>{item.rate}%</Text>
               </View>
             </View>
           ))}
@@ -118,26 +118,26 @@ export default function LeaderboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 16 },
-  title: { fontSize: 22, fontWeight: '800' as const, color: Colors.text, marginBottom: 16 },
+  title: { fontSize: 22, fontWeight: '800' as const, marginBottom: 16 },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 15, fontWeight: '700' as const, color: Colors.text, marginBottom: 10 },
+  sectionTitle: { fontSize: 15, fontWeight: '700' as const, marginBottom: 10 },
   rankCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderRadius: 10, padding: 12,
-    marginBottom: 6, borderWidth: 1, borderColor: Colors.border, gap: 10,
+    flexDirection: 'row', alignItems: 'center', borderRadius: 10, padding: 12,
+    marginBottom: 6, borderWidth: 1, gap: 10,
   },
   rank: { fontSize: 16, minWidth: 28, textAlign: 'center' as const },
   indAvatar: { width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
   indAvatarText: { color: '#fff', fontWeight: '700' as const, fontSize: 10 },
   rankInfo: { flex: 1 },
-  rankName: { fontSize: 13, fontWeight: '600' as const, color: Colors.text },
-  rankMeta: { fontSize: 11, color: Colors.muted },
+  rankName: { fontSize: 13, fontWeight: '600' as const },
+  rankMeta: { fontSize: 11 },
   roleBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, alignSelf: 'flex-start', marginTop: 2 },
   roleText: { fontSize: 9, fontWeight: '700' as const },
   rankStats: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   rankScore: { fontSize: 14, fontWeight: '800' as const, minWidth: 28, textAlign: 'center' as const },
   rankRate: { fontSize: 12, fontWeight: '700' as const, minWidth: 32, textAlign: 'center' as const },
-  rankEarnings: { fontSize: 11, fontWeight: '600' as const, color: Colors.green },
+  rankEarnings: { fontSize: 11, fontWeight: '600' as const },
 });
