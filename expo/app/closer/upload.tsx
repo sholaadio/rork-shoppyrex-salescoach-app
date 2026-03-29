@@ -236,12 +236,7 @@ export default function UploadCallScreen() {
                 </View>
               )}
 
-              {analysis.scriptSuggestion && (
-                <View style={styles.listSection}>
-                  <Text style={[styles.listTitle, { color: Colors.purple }]}>Script Suggestion</Text>
-                  <Text style={styles.scriptText}>{analysis.scriptSuggestion}</Text>
-                </View>
-              )}
+
             </View>
           )}
 
