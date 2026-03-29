@@ -193,13 +193,37 @@ export async function deleteGoal(id: string): Promise<void> {
 }
 
 export async function transcribeAudio(formData: FormData): Promise<{ transcript: string }> {
-  console.log('[API] Transcribing audio...');
-  const res = await fetch(`${API_BASE}/transcribe`, {
-    method: 'POST',
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Failed to transcribe audio');
-  return res.json();
+  console.log('[API] Transcribing audio to', `${API_BASE}/transcribe`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120000);
+  try {
+    const res = await fetch(`${API_BASE}/transcribe`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    console.log('[API] Transcribe response status:', res.status);
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => 'Unknown error');
+      console.log('[API] Transcribe error response:', errorText);
+      throw new Error(`Transcription failed (${res.status}): ${errorText}`);
+    }
+    const data = await res.json();
+    console.log('[API] Transcribe success, transcript length:', data?.transcript?.length ?? 0);
+    return data;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err?.name === 'AbortError') {
+      console.log('[API] Transcribe request timed out after 120s');
+      throw new Error('Transcription timed out. The audio file may be too large. Please try a shorter recording.');
+    }
+    console.log('[API] Transcribe fetch error:', err?.message, err);
+    throw err;
+  }
 }
 
 export async function analyzeCall(data: {
@@ -211,13 +235,34 @@ export async function analyzeCall(data: {
   teamType: string;
 }): Promise<{ analysis: string }> {
   console.log('[API] Analyzing call...');
-  const res = await fetch(`${API_BASE}/analyze`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Failed to analyze call');
-  return res.json();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120000);
+  try {
+    const res = await fetch(`${API_BASE}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(data),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    console.log('[API] Analyze response status:', res.status);
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => 'Unknown error');
+      console.log('[API] Analyze error response:', errorText);
+      throw new Error(`Analysis failed (${res.status}): ${errorText}`);
+    }
+    const result = await res.json();
+    console.log('[API] Analyze success');
+    return result;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err?.name === 'AbortError') {
+      console.log('[API] Analyze request timed out after 120s');
+      throw new Error('Analysis timed out. Please try again.');
+    }
+    console.log('[API] Analyze fetch error:', err?.message, err);
+    throw err;
+  }
 }
 
 export async function updateUser(id: string, data: Partial<User>): Promise<User> {
