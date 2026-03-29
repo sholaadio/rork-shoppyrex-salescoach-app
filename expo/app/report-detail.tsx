@@ -54,17 +54,43 @@ export default function ReportDetailScreen() {
   const score = report.score || analysis?.overallScore || 0;
   const closeRate = analysis?.closeRate;
   const duration = analysis?.duration;
-  const ngLanguage = analysis?.ngLanguage || analysis?.language;
-  const criticalMoment = analysis?.criticalMoment;
+  const ngLanguage = analysis?.languageNote || analysis?.ngLanguage || analysis?.language;
+  const criticalMoment = analysis?.transcriptInsight || analysis?.criticalMoment;
   const memorizeScript = analysis?.memorizeScript || analysis?.scriptSuggestion;
   const resources = analysis?.resources || analysis?.learningResources;
 
-  const youtubeResources = resources?.filter?.((r: any) => r.type?.toLowerCase() === 'youtube' || r.type?.toLowerCase() === 'video') || [];
-  const bookResources = resources?.filter?.((r: any) => r.type?.toLowerCase() === 'book' || r.type?.toLowerCase() === 'books') || [];
-  const podcastResources = resources?.filter?.((r: any) => r.type?.toLowerCase() === 'podcast' || r.type?.toLowerCase() === 'podcasts') || [];
+  const isResourceArray = Array.isArray(resources);
+  const resourceObj = !isResourceArray && resources ? resources : null;
+  const youtubeResources = isResourceArray
+    ? resources.filter((r: any) => r.type?.toLowerCase() === 'youtube' || r.type?.toLowerCase() === 'video')
+    : Array.isArray(resourceObj?.youtube) ? resourceObj.youtube : [];
+  const bookResources = isResourceArray
+    ? resources.filter((r: any) => r.type?.toLowerCase() === 'book' || r.type?.toLowerCase() === 'books')
+    : Array.isArray(resourceObj?.books) ? resourceObj.books : [];
+  const podcastResources = isResourceArray
+    ? resources.filter((r: any) => r.type?.toLowerCase() === 'podcast' || r.type?.toLowerCase() === 'podcasts')
+    : Array.isArray(resourceObj?.podcasts) ? resourceObj.podcasts : [];
 
   const skillBreakdown = analysis?.skillBreakdown;
+  const metricsArray = analysis?.metrics;
   const orderedSkills = useMemo(() => {
+    if (Array.isArray(metricsArray) && metricsArray.length > 0) {
+      const ordered: Array<{ name: string; value: number }> = [];
+      const used = new Set<number>();
+      for (const canonical of SKILL_ORDER) {
+        const idx = metricsArray.findIndex((m: any) => normalizeSkillKey(m.label || m.name || '') === canonical);
+        if (idx !== -1) {
+          ordered.push({ name: canonical, value: Number(metricsArray[idx].score ?? metricsArray[idx].value ?? 0) });
+          used.add(idx);
+        }
+      }
+      metricsArray.forEach((m: any, i: number) => {
+        if (!used.has(i)) {
+          ordered.push({ name: m.label || m.name || `Skill ${i + 1}`, value: Number(m.score ?? m.value ?? 0) });
+        }
+      });
+      return ordered;
+    }
     if (!skillBreakdown) return [];
     const entries = Object.entries(skillBreakdown);
     const ordered: Array<{ name: string; value: number }> = [];
@@ -83,7 +109,7 @@ export default function ReportDetailScreen() {
       }
     }
     return ordered;
-  }, [skillBreakdown]);
+  }, [skillBreakdown, metricsArray]);
 
   return (
     <View style={styles.container}>
@@ -202,7 +228,7 @@ export default function ReportDetailScreen() {
           </View>
         )}
 
-        {resources && resources.length > 0 && (
+        {resources && (youtubeResources.length > 0 || bookResources.length > 0 || podcastResources.length > 0) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>AI-Recommended Learning Resources</Text>
 
