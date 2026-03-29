@@ -240,20 +240,22 @@ export default function ReportDetailScreen() {
                   <Youtube size={16} color="#FF0000" />
                   <Text style={styles.resourceGroupTitle}>YouTube</Text>
                 </View>
-                {youtubeResources.map((res: any, i: number) => (
-                  <View key={`yt-${i}`} style={styles.resourceItem}>
-                    <Text style={styles.resourceItemTitle}>{res.title || res.name}</Text>
-                    {(res.description || res.channel) && (
-                      <Text style={styles.resourceItemDesc}>{res.description || res.channel}</Text>
-                    )}
-                    {res.url && (
-                      <TouchableOpacity style={styles.resourceLink} onPress={() => openUrl(res.url)} activeOpacity={0.7}>
+                {youtubeResources.map((res: any, i: number) => {
+                  const title = res.title || res.name || '';
+                  const ytUrl = res.url || `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' sales training')}`;
+                  return (
+                    <TouchableOpacity key={`yt-${i}`} style={styles.resourceItem} onPress={() => openUrl(ytUrl)} activeOpacity={0.7}>
+                      <Text style={styles.resourceItemTitle}>{title}</Text>
+                      {(res.description || res.channel) && (
+                        <Text style={styles.resourceItemDesc}>{res.description || res.channel}</Text>
+                      )}
+                      <View style={styles.resourceLink}>
                         <ExternalLink size={12} color={Colors.blue} />
-                        <Text style={styles.resourceLinkText}>Watch on YouTube</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                ))}
+                        <Text style={styles.resourceLinkText}>Search on YouTube →</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
 
@@ -263,19 +265,21 @@ export default function ReportDetailScreen() {
                   <BookOpen size={16} color={Colors.orange} />
                   <Text style={styles.resourceGroupTitle}>Books</Text>
                 </View>
-                {bookResources.map((res: any, i: number) => (
-                  <View key={`bk-${i}`} style={styles.resourceItem}>
-                    <Text style={styles.resourceItemTitle}>{res.title || res.name}</Text>
-                    {res.author && <Text style={styles.resourceAuthor}>by {res.author}</Text>}
-                    {res.description && <Text style={styles.resourceItemDesc}>{res.description}</Text>}
-                    {res.url && (
-                      <TouchableOpacity style={styles.resourceLink} onPress={() => openUrl(res.url)} activeOpacity={0.7}>
+                {bookResources.map((res: any, i: number) => {
+                  const title = res.title || res.name || '';
+                  const bookUrl = res.url || `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=stripbooks`;
+                  return (
+                    <TouchableOpacity key={`bk-${i}`} style={styles.resourceItem} onPress={() => openUrl(bookUrl)} activeOpacity={0.7}>
+                      <Text style={styles.resourceItemTitle}>{title}</Text>
+                      {res.author && <Text style={styles.resourceAuthor}>by {res.author}</Text>}
+                      {res.description && <Text style={styles.resourceItemDesc}>{res.description}</Text>}
+                      <View style={styles.resourceLink}>
                         <ExternalLink size={12} color={Colors.orange} />
-                        <Text style={[styles.resourceLinkText, { color: Colors.orange }]}>Buy on Amazon</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                ))}
+                        <Text style={[styles.resourceLinkText, { color: Colors.orange }]}>Buy on Amazon →</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
 
@@ -285,19 +289,22 @@ export default function ReportDetailScreen() {
                   <Headphones size={16} color={Colors.green} />
                   <Text style={styles.resourceGroupTitle}>Podcasts</Text>
                 </View>
-                {podcastResources.map((res: any, i: number) => (
-                  <View key={`pd-${i}`} style={styles.resourceItem}>
-                    <Text style={styles.resourceItemTitle}>{res.title || res.name}</Text>
-                    {(res.show || res.showName) && <Text style={styles.resourceAuthor}>{res.show || res.showName}</Text>}
-                    {res.description && <Text style={styles.resourceItemDesc}>{res.description}</Text>}
-                    {res.url && (
-                      <TouchableOpacity style={styles.resourceLink} onPress={() => openUrl(res.url)} activeOpacity={0.7}>
+                {podcastResources.map((res: any, i: number) => {
+                  const title = res.title || res.name || '';
+                  const show = res.show || res.showName || '';
+                  const spotifyUrl = res.url || `https://open.spotify.com/search/${encodeURIComponent(show + ' ' + title)}`;
+                  return (
+                    <TouchableOpacity key={`pd-${i}`} style={styles.resourceItem} onPress={() => openUrl(spotifyUrl)} activeOpacity={0.7}>
+                      <Text style={styles.resourceItemTitle}>{title}</Text>
+                      {show ? <Text style={styles.resourceAuthor}>{show}</Text> : null}
+                      {res.description && <Text style={styles.resourceItemDesc}>{res.description}</Text>}
+                      <View style={styles.resourceLink}>
                         <ExternalLink size={12} color={Colors.green} />
-                        <Text style={[styles.resourceLinkText, { color: Colors.green }]}>Listen on Spotify</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                ))}
+                        <Text style={[styles.resourceLinkText, { color: Colors.green }]}>Listen on Spotify →</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
           </View>
