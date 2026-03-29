@@ -15,7 +15,7 @@ import { useTeamType } from '@/hooks/useData';
 import { transcribeAudio, analyzeCall, submitReport } from '@/services/api';
 
 const CALL_TYPES = ['Phone Call', 'WhatsApp'];
-const OUTCOMES = ['Confirmed', 'Pending', 'Rejected', 'Not Interested', 'Unknown'];
+const OUTCOMES = ['Confirmed', 'Cancelled', 'Follow Up', 'Callback', 'Unknown'];
 
 export default function UploadCallScreen() {
   const { user } = useAuth();
@@ -63,19 +63,26 @@ export default function UploadCallScreen() {
 
       const score = parsed.overallScore ?? parsed.score ?? 0;
 
+      const outcomeMap: Record<string, string> = {
+        'confirmed': 'confirmed',
+        'cancelled': 'cancelled',
+        'follow up': 'followup',
+        'callback': 'callback',
+        'unknown': 'unknown',
+      };
+
       await submitReport({
         closerId: user?.id ?? '',
         closerName: user?.name ?? '',
         teamId: user?.teamId ?? '',
-        teamType,
+        teamType: teamType || 'sales',
         callType: callType === 'Phone Call' ? 'phone' : 'whatsapp',
-        callOutcome: outcome.toLowerCase(),
+        callOutcome: outcomeMap[outcome.toLowerCase()] ?? 'unknown',
         product: product.trim(),
         transcript,
         analysis: parsed,
-        score,
-        date: Date.now(),
-      });
+        audioFileName: audioFile?.name || 'recording.m4a',
+      } as any);
 
       return { ...parsed, score };
     },

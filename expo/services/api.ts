@@ -130,20 +130,21 @@ export async function deleteLog(id: string): Promise<void> {
   if (error) throw new Error('Failed to delete log');
 }
 
-export async function submitReport(report: Partial<CallReport>): Promise<CallReport> {
+export async function submitReport(report: Partial<CallReport> & { audioFileName?: string }): Promise<CallReport> {
   console.log('[API] Submitting report to backend server...');
   const body = {
+    id: `rpt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     closerId: report.closerId ?? '',
     closerName: report.closerName ?? '',
     teamId: report.teamId ?? '',
-    teamType: report.teamType ?? '',
+    teamType: report.teamType ?? 'sales',
+    date: Date.now(),
     callType: report.callType ?? '',
     callOutcome: report.callOutcome ?? '',
     product: report.product ?? '',
+    audioFileName: report.audioFileName ?? 'recording.m4a',
     transcript: report.transcript ?? '',
     analysis: report.analysis ?? {},
-    score: report.score ?? 0,
-    date: report.date ?? Date.now(),
   };
   console.log('[API] Report body keys:', Object.keys(body));
   const controller = new AbortController();
