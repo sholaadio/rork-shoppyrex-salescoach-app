@@ -131,15 +131,48 @@ export async function deleteLog(id: string): Promise<void> {
 }
 
 export async function submitReport(report: Partial<CallReport>): Promise<CallReport> {
-  console.log('[API] Submitting report to Supabase...');
-  const id = report.id || `rpt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const row = { ...report, id };
-  const { data, error } = await supabase.from('sc_reports').insert(row).select().single();
-  if (error) {
-    console.log('[API] Supabase submit report error:', error.message);
-    throw new Error('Failed to submit report');
+  console.log('[API] Submitting report to backend server...');
+  const body = {
+    closerId: report.closerId ?? '',
+    closerName: report.closerName ?? '',
+    teamId: report.teamId ?? '',
+    teamType: report.teamType ?? '',
+    callType: report.callType ?? '',
+    callOutcome: report.callOutcome ?? '',
+    product: report.product ?? '',
+    transcript: report.transcript ?? '',
+    analysis: report.analysis ?? {},
+    score: report.score ?? 0,
+    date: report.date ?? Date.now(),
+  };
+  console.log('[API] Report body keys:', Object.keys(body));
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  try {
+    const res = await fetch(`${API_BASE}/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    console.log('[API] Submit report response status:', res.status);
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => 'Unknown error');
+      console.log('[API] Submit report error response:', errorText);
+      throw new Error(`Failed to submit report (${res.status}): ${errorText}`);
+    }
+    const data = await res.json();
+    console.log('[API] Submit report success, id:', data?.id);
+    return mapReport(data);
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err?.name === 'AbortError') {
+      throw new Error('Report submission timed out. Please try again.');
+    }
+    console.log('[API] Submit report fetch error:', err?.message, err);
+    throw err;
   }
-  return mapReport(data);
 }
 
 export async function deleteReport(id: string): Promise<void> {
