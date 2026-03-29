@@ -172,13 +172,6 @@ export default function ReportDetailScreen() {
           </View>
         )}
 
-        {analysis?.scriptSuggestion && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: Colors.purple }]}>Script Suggestion</Text>
-            <Text style={styles.scriptText}>{analysis.scriptSuggestion}</Text>
-          </View>
-        )}
-
         {ngLanguage && (
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
