@@ -1,9 +1,28 @@
-import React, { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useMemo, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Colors, getScoreColor } from '@/constants/colors';
 import { useReports } from '@/hooks/useData';
 import { formatTimestamp } from '@/utils/date';
+import { Clock, BarChart3, Youtube, BookOpen, Headphones, ExternalLink } from 'lucide-react-native';
+
+const SKILL_ORDER = [
+  'Opening & Rapport',
+  'Needs Discovery',
+  'Product Pitch',
+  'Objection Handling',
+  'Urgency Creation',
+  'Close Attempt',
+];
+
+function normalizeSkillKey(key: string): string {
+  const lower = key.toLowerCase().replace(/[_-]/g, ' ').trim();
+  for (const skill of SKILL_ORDER) {
+    if (skill.toLowerCase() === lower) return skill;
+    if (lower.includes(skill.toLowerCase().split(' ')[0].toLowerCase())) return skill;
+  }
+  return key;
+}
 
 export default function ReportDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -13,6 +32,12 @@ export default function ReportDetailScreen() {
     if (!reports) return null;
     return reports.find(r => r.id === id);
   }, [reports, id]);
+
+  const openUrl = useCallback((url: string) => {
+    if (url) {
+      Linking.openURL(url).catch(err => console.log('Failed to open URL:', err));
+    }
+  }, []);
 
   if (!report) {
     return (
@@ -25,8 +50,40 @@ export default function ReportDetailScreen() {
     );
   }
 
-  const analysis = report.analysis;
+  const analysis: any = report.analysis;
   const score = report.score || analysis?.overallScore || 0;
+  const closeRate = analysis?.closeRate;
+  const duration = analysis?.duration;
+  const ngLanguage = analysis?.ngLanguage || analysis?.language;
+  const criticalMoment = analysis?.criticalMoment;
+  const memorizeScript = analysis?.memorizeScript || analysis?.scriptSuggestion;
+  const resources = analysis?.resources || analysis?.learningResources;
+
+  const youtubeResources = resources?.filter?.((r: any) => r.type?.toLowerCase() === 'youtube' || r.type?.toLowerCase() === 'video') || [];
+  const bookResources = resources?.filter?.((r: any) => r.type?.toLowerCase() === 'book' || r.type?.toLowerCase() === 'books') || [];
+  const podcastResources = resources?.filter?.((r: any) => r.type?.toLowerCase() === 'podcast' || r.type?.toLowerCase() === 'podcasts') || [];
+
+  const skillBreakdown = analysis?.skillBreakdown;
+  const orderedSkills = useMemo(() => {
+    if (!skillBreakdown) return [];
+    const entries = Object.entries(skillBreakdown);
+    const ordered: Array<{ name: string; value: number }> = [];
+    const used = new Set<string>();
+
+    for (const canonical of SKILL_ORDER) {
+      const match = entries.find(([k]) => normalizeSkillKey(k) === canonical);
+      if (match) {
+        ordered.push({ name: canonical, value: Number(match[1]) });
+        used.add(match[0]);
+      }
+    }
+    for (const [k, v] of entries) {
+      if (!used.has(k)) {
+        ordered.push({ name: k, value: Number(v) });
+      }
+    }
+    return ordered;
+  }, [skillBreakdown]);
 
   return (
     <View style={styles.container}>
@@ -37,6 +94,25 @@ export default function ReportDetailScreen() {
             <Text style={[styles.scoreNum, { color: getScoreColor(score) }]}>{score}</Text>
             <Text style={styles.scoreOf}>/100</Text>
           </View>
+
+          {(closeRate != null || duration != null) && (
+            <View style={styles.statPillsRow}>
+              {closeRate != null && (
+                <View style={styles.statPill}>
+                  <BarChart3 size={13} color={Colors.blue} />
+                  <Text style={styles.statPillLabel}>Close Rate</Text>
+                  <Text style={styles.statPillValue}>{closeRate}%</Text>
+                </View>
+              )}
+              {duration != null && (
+                <View style={styles.statPill}>
+                  <Clock size={13} color={Colors.purple} />
+                  <Text style={styles.statPillLabel}>Duration</Text>
+                  <Text style={styles.statPillValue}>{duration}</Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.metaCard}>
@@ -81,16 +157,16 @@ export default function ReportDetailScreen() {
           </View>
         )}
 
-        {analysis?.skillBreakdown && (
+        {orderedSkills.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Skill Breakdown</Text>
-            {Object.entries(analysis.skillBreakdown).map(([skill, val]) => (
-              <View key={skill} style={styles.skillRow}>
-                <Text style={styles.skillLabel}>{skill}</Text>
+            {orderedSkills.map((skill) => (
+              <View key={skill.name} style={styles.skillRow}>
+                <Text style={styles.skillLabel}>{skill.name}</Text>
                 <View style={styles.skillBar}>
-                  <View style={[styles.skillFill, { width: `${Math.min(Number(val), 100)}%`, backgroundColor: getScoreColor(Number(val)) }]} />
+                  <View style={[styles.skillFill, { width: `${Math.min(skill.value, 100)}%`, backgroundColor: getScoreColor(skill.value) }]} />
                 </View>
-                <Text style={[styles.skillVal, { color: getScoreColor(Number(val)) }]}>{String(val)}</Text>
+                <Text style={[styles.skillVal, { color: getScoreColor(skill.value) }]}>{skill.value}</Text>
               </View>
             ))}
           </View>
@@ -103,19 +179,110 @@ export default function ReportDetailScreen() {
           </View>
         )}
 
-        {(analysis?.learningResources?.length ?? 0) > 0 && (
+        {ngLanguage && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Learning Resources</Text>
-            {analysis!.learningResources!.map((res: any, i: number) => (
-              <View key={i} style={styles.resourceCard}>
-                <Text style={styles.resourceType}>{res.type}</Text>
-                <Text style={styles.resourceTitle}>{res.title}</Text>
-              </View>
-            ))}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.ngIcon}>🗣️</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>NG Language</Text>
+            </View>
+            <Text style={styles.sectionBody}>{typeof ngLanguage === 'string' ? ngLanguage : JSON.stringify(ngLanguage)}</Text>
           </View>
         )}
 
-        <View style={{ height: 30 }} />
+        {criticalMoment && (
+          <View style={[styles.section, styles.criticalCard]}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.ngIcon}>⚡</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0, color: Colors.yellow }]}>Critical Moment</Text>
+            </View>
+            <Text style={styles.sectionBody}>{typeof criticalMoment === 'string' ? criticalMoment : JSON.stringify(criticalMoment)}</Text>
+          </View>
+        )}
+
+        {memorizeScript && (
+          <View style={[styles.section, styles.memorizeCard]}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.ngIcon}>📝</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0, color: Colors.green }]}>Memorize This Script</Text>
+            </View>
+            <Text style={styles.memorizeText}>{memorizeScript}</Text>
+          </View>
+        )}
+
+        {resources && resources.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>AI-Recommended Learning Resources</Text>
+
+            {youtubeResources.length > 0 && (
+              <View style={styles.resourceGroup}>
+                <View style={styles.resourceGroupHeader}>
+                  <Youtube size={16} color="#FF0000" />
+                  <Text style={styles.resourceGroupTitle}>YouTube</Text>
+                </View>
+                {youtubeResources.map((res: any, i: number) => (
+                  <View key={`yt-${i}`} style={styles.resourceItem}>
+                    <Text style={styles.resourceItemTitle}>{res.title || res.name}</Text>
+                    {(res.description || res.channel) && (
+                      <Text style={styles.resourceItemDesc}>{res.description || res.channel}</Text>
+                    )}
+                    {res.url && (
+                      <TouchableOpacity style={styles.resourceLink} onPress={() => openUrl(res.url)} activeOpacity={0.7}>
+                        <ExternalLink size={12} color={Colors.blue} />
+                        <Text style={styles.resourceLinkText}>Watch on YouTube</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {bookResources.length > 0 && (
+              <View style={styles.resourceGroup}>
+                <View style={styles.resourceGroupHeader}>
+                  <BookOpen size={16} color={Colors.orange} />
+                  <Text style={styles.resourceGroupTitle}>Books</Text>
+                </View>
+                {bookResources.map((res: any, i: number) => (
+                  <View key={`bk-${i}`} style={styles.resourceItem}>
+                    <Text style={styles.resourceItemTitle}>{res.title || res.name}</Text>
+                    {res.author && <Text style={styles.resourceAuthor}>by {res.author}</Text>}
+                    {res.description && <Text style={styles.resourceItemDesc}>{res.description}</Text>}
+                    {res.url && (
+                      <TouchableOpacity style={styles.resourceLink} onPress={() => openUrl(res.url)} activeOpacity={0.7}>
+                        <ExternalLink size={12} color={Colors.orange} />
+                        <Text style={[styles.resourceLinkText, { color: Colors.orange }]}>Buy on Amazon</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {podcastResources.length > 0 && (
+              <View style={styles.resourceGroup}>
+                <View style={styles.resourceGroupHeader}>
+                  <Headphones size={16} color={Colors.green} />
+                  <Text style={styles.resourceGroupTitle}>Podcasts</Text>
+                </View>
+                {podcastResources.map((res: any, i: number) => (
+                  <View key={`pd-${i}`} style={styles.resourceItem}>
+                    <Text style={styles.resourceItemTitle}>{res.title || res.name}</Text>
+                    {(res.show || res.showName) && <Text style={styles.resourceAuthor}>{res.show || res.showName}</Text>}
+                    {res.description && <Text style={styles.resourceItemDesc}>{res.description}</Text>}
+                    {res.url && (
+                      <TouchableOpacity style={styles.resourceLink} onPress={() => openUrl(res.url)} activeOpacity={0.7}>
+                        <ExternalLink size={12} color={Colors.green} />
+                        <Text style={[styles.resourceLinkText, { color: Colors.green }]}>Listen on Spotify</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );
@@ -146,18 +313,56 @@ const styles = StyleSheet.create({
   scoreCircle: { width: 100, height: 100, borderRadius: 50, borderWidth: 4, justifyContent: 'center', alignItems: 'center' },
   scoreNum: { fontSize: 36, fontWeight: '900' as const },
   scoreOf: { fontSize: 14, color: Colors.muted },
+  statPillsRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  statPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.card,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  statPillLabel: { fontSize: 11, color: Colors.muted, fontWeight: '500' as const },
+  statPillValue: { fontSize: 13, color: Colors.text, fontWeight: '700' as const },
   metaCard: { backgroundColor: Colors.card, borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: Colors.border },
   section: { backgroundColor: Colors.card, borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: Colors.border },
   sectionTitle: { fontSize: 15, fontWeight: '700' as const, color: Colors.text, marginBottom: 8 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  ngIcon: { fontSize: 18 },
+  sectionBody: { fontSize: 13, color: Colors.soft, lineHeight: 20 },
   verdictText: { fontSize: 14, color: Colors.soft, lineHeight: 20 },
   listItem: { fontSize: 13, color: Colors.soft, marginBottom: 4, lineHeight: 18 },
-  skillRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 },
-  skillLabel: { fontSize: 12, color: Colors.soft, width: 90 },
+  skillRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8 },
+  skillLabel: { fontSize: 12, color: Colors.soft, width: 110 },
   skillBar: { flex: 1, height: 8, backgroundColor: Colors.border, borderRadius: 4, overflow: 'hidden' as const },
-  skillFill: { height: '100%', borderRadius: 4 },
+  skillFill: { height: '100%' as const, borderRadius: 4 },
   skillVal: { fontSize: 12, fontWeight: '700' as const, minWidth: 24, textAlign: 'right' as const },
   scriptText: { fontSize: 13, color: Colors.soft, lineHeight: 20, fontStyle: 'italic' as const },
-  resourceCard: { backgroundColor: Colors.background, borderRadius: 8, padding: 10, marginBottom: 6 },
-  resourceType: { fontSize: 10, color: Colors.muted, textTransform: 'uppercase' as const, fontWeight: '600' as const },
-  resourceTitle: { fontSize: 13, color: Colors.text, marginTop: 2 },
+  criticalCard: { borderLeftWidth: 3, borderLeftColor: Colors.yellow },
+  memorizeCard: { borderLeftWidth: 3, borderLeftColor: Colors.green },
+  memorizeText: { fontSize: 13, color: Colors.soft, lineHeight: 22, fontStyle: 'italic' as const },
+  resourceGroup: { marginBottom: 16 },
+  resourceGroupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  resourceGroupTitle: { fontSize: 14, fontWeight: '700' as const, color: Colors.text },
+  resourceItem: {
+    backgroundColor: Colors.background,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  resourceItemTitle: { fontSize: 13, fontWeight: '600' as const, color: Colors.text, marginBottom: 2 },
+  resourceAuthor: { fontSize: 11, color: Colors.muted, marginBottom: 4 },
+  resourceItemDesc: { fontSize: 12, color: Colors.soft, lineHeight: 17, marginBottom: 6 },
+  resourceLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+  },
+  resourceLinkText: { fontSize: 12, fontWeight: '600' as const, color: Colors.blue },
 });
