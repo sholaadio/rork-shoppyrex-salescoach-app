@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { Period } from '@/types';
 import * as Haptics from 'expo-haptics';
 
@@ -18,6 +19,7 @@ interface PeriodFilterProps {
 }
 
 export default React.memo(function PeriodFilter({ selected, onSelect }: PeriodFilterProps) {
+  const colors = useColors();
   const handlePress = useCallback((key: Period) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onSelect(key);
@@ -29,10 +31,10 @@ export default React.memo(function PeriodFilter({ selected, onSelect }: PeriodFi
         <TouchableOpacity
           key={p.key}
           onPress={() => handlePress(p.key)}
-          style={[styles.pill, selected === p.key && styles.pillActive]}
+          style={[styles.pill, { backgroundColor: colors.card, borderColor: colors.border }, selected === p.key && { backgroundColor: colors.green, borderColor: colors.green }]}
           testID={`period-${p.key}`}
         >
-          <Text style={[styles.pillText, selected === p.key && styles.pillTextActive]}>
+          <Text style={[styles.pillText, { color: colors.muted }, selected === p.key && styles.pillTextActive]}>
             {p.label}
           </Text>
         </TouchableOpacity>

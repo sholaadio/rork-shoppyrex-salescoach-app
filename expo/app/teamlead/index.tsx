@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AlertCircle, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useColors } from '@/contexts/ThemeContext';
 import { Colors, getScoreColor, getRateColor } from '@/constants/colors';
 import { Period, getInitials } from '@/types';
 import { useTeamMembers, useTeamName, useTeamReports, useTeamLogs, useLogs, useReports } from '@/hooks/useData';
@@ -13,6 +14,7 @@ import PeriodFilter from '@/components/PeriodFilter';
 
 export default function MyTeamScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const router = useRouter();
   const [period, setPeriod] = useState<Period>('month');
   const teamName = useTeamName(user?.teamId);
@@ -46,13 +48,13 @@ export default function MyTeamScreen() {
   const onRefresh = () => { void rl(); void rr(); };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={r1 || r2} onRefresh={onRefresh} tintColor={Colors.green} />}
+          refreshControl={<RefreshControl refreshing={r1 || r2} onRefresh={onRefresh} tintColor={colors.green} />}
         >
           {!hasLogToday && (
             <TouchableOpacity style={styles.alertBanner} onPress={() => router.push('/teamlead/calls')} activeOpacity={0.8}>
@@ -62,7 +64,7 @@ export default function MyTeamScreen() {
             </TouchableOpacity>
           )}
 
-          <Text style={styles.title}>{teamName}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{teamName}</Text>
           <Text style={styles.subtitle}>{closers.length} members</Text>
 
           <PeriodFilter selected={period} onSelect={setPeriod} />

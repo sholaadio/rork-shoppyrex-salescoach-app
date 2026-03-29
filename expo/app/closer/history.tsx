@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useColors } from '@/contexts/ThemeContext';
 import { Colors, getScoreColor } from '@/constants/colors';
 import { Period } from '@/types';
 import { useUserReports, useReports } from '@/hooks/useData';
@@ -11,6 +12,7 @@ import PeriodFilter from '@/components/PeriodFilter';
 
 export default function HistoryScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const router = useRouter();
   const [period, setPeriod] = useState<Period>('month');
   const reports = useUserReports(user?.id ?? '', period);
@@ -19,15 +21,15 @@ export default function HistoryScreen() {
   const sorted = useMemo(() => [...reports].sort((a, b) => b.date - a.date), [reports]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={Colors.green} />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.green} />}
         >
-          <Text style={styles.title}>My Call History</Text>
+          <Text style={[styles.title, { color: colors.text }]}>My Call History</Text>
           <PeriodFilter selected={period} onSelect={setPeriod} />
 
           {sorted.length === 0 ? (

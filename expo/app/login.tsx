@@ -8,10 +8,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Lock, User, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/contexts/AuthContext';
+import { useColors } from '@/contexts/ThemeContext';
 import { Colors } from '@/constants/colors';
 
 export default function LoginScreen() {
   const { loginMutation, user, portal } = useAuth();
+  const colors = useColors();
   const router = useRouter();
   const [employeeId, setEmployeeId] = useState('');
   const [pin, setPin] = useState('');
@@ -55,7 +57,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
         colors={['#0A0D16', '#07080F', '#050610']}
         style={StyleSheet.absoluteFill}

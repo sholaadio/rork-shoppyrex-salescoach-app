@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { UserRole, getInitials, getRoleLabel, getRoleBadgeColor } from '@/types';
 import { useUsersArray, useTeamsArray } from '@/hooks/useData';
 import { bulkSaveUsers, updateUser, deleteUser } from '@/services/api';
@@ -25,6 +26,7 @@ const ROLES: { key: UserRole; label: string }[] = [
 
 export default function ManageStaffScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const queryClient = useQueryClient();
   const allUsers = useUsersArray();
   const allTeams = useTeamsArray();
@@ -163,8 +165,8 @@ export default function ManageStaffScreen() {
   const selectedTeam = allTeams.find(t => t.id === teamId);
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Manage Staff', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'Manage Staff', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>👥 Manage Staff</Text>
         <Text style={styles.subtitle}>{allUsers.length} total staff members</Text>

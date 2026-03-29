@@ -5,38 +5,43 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { Colors } from "@/constants/colors";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 
 void SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
+  const { isDark, colors } = useTheme();
+
   return (
-    <Stack
-      screenOptions={{
-        headerBackTitle: "Back",
-        headerStyle: { backgroundColor: Colors.background },
-        headerTintColor: Colors.text,
-        contentStyle: { backgroundColor: Colors.background },
-      }}
-    >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="closer" options={{ headerShown: false }} />
-      <Stack.Screen name="teamlead" options={{ headerShown: false }} />
-      <Stack.Screen name="management" options={{ headerShown: false }} />
-      <Stack.Screen name="leaderboard" options={{ title: "Leaderboard", presentation: "modal" }} />
-      <Stack.Screen name="attendance" options={{ title: "Attendance", presentation: "modal" }} />
-      <Stack.Screen name="no-answer" options={{ title: "No Answer", presentation: "modal" }} />
-      <Stack.Screen name="ai-summary" options={{ title: "AI Summary", presentation: "modal" }} />
-      <Stack.Screen name="report-detail" options={{ title: "Call Analysis", presentation: "modal" }} />
-      <Stack.Screen name="manage-staff" options={{ title: "Manage Staff", presentation: "modal" }} />
-      <Stack.Screen name="roles" options={{ title: "Roles & Permissions", presentation: "modal" }} />
-      <Stack.Screen name="pay-report" options={{ title: "Pay Report", presentation: "modal" }} />
-      <Stack.Screen name="analyses" options={{ title: "AI Analyses", presentation: "modal" }} />
-      <Stack.Screen name="teamlead-log" options={{ title: "My Daily Log", presentation: "modal" }} />
-    </Stack>
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <Stack
+        screenOptions={{
+          headerBackTitle: "Back",
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="closer" options={{ headerShown: false }} />
+        <Stack.Screen name="teamlead" options={{ headerShown: false }} />
+        <Stack.Screen name="management" options={{ headerShown: false }} />
+        <Stack.Screen name="leaderboard" options={{ title: "Leaderboard", presentation: "modal" }} />
+        <Stack.Screen name="attendance" options={{ title: "Attendance", presentation: "modal" }} />
+        <Stack.Screen name="no-answer" options={{ title: "No Answer", presentation: "modal" }} />
+        <Stack.Screen name="ai-summary" options={{ title: "AI Summary", presentation: "modal" }} />
+        <Stack.Screen name="report-detail" options={{ title: "Call Analysis", presentation: "modal" }} />
+        <Stack.Screen name="manage-staff" options={{ title: "Manage Staff", presentation: "modal" }} />
+        <Stack.Screen name="roles" options={{ title: "Roles & Permissions", presentation: "modal" }} />
+        <Stack.Screen name="pay-report" options={{ title: "Pay Report", presentation: "modal" }} />
+        <Stack.Screen name="analyses" options={{ title: "AI Analyses", presentation: "modal" }} />
+        <Stack.Screen name="teamlead-log" options={{ title: "My Daily Log", presentation: "modal" }} />
+      </Stack>
+    </>
   );
 }
 
@@ -48,10 +53,11 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <AuthProvider>
-          <StatusBar style="light" />
-          <RootLayoutNav />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <RootLayoutNav />
+          </AuthProvider>
+        </ThemeProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { useGoals, useUsersArray, useTeamsArray, useLogs } from '@/hooks/useData';
 import { getCurrentMonth, getMonthLabel } from '@/utils/date';
 import { submitGoal, deleteGoal } from '@/services/api';
@@ -24,6 +25,7 @@ const SCOPES = ['Company', 'Team', 'Individual'] as const;
 
 export default function ManagementGoalsScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const queryClient = useQueryClient();
   const allUsers = useUsersArray();
   const allTeams = useTeamsArray();
@@ -123,11 +125,11 @@ export default function ManagementGoalsScreen() {
   });
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Goals</Text>
-          <Text style={styles.subtitle}>{getMonthLabel(month)}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Goals</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>{getMonthLabel(month)}</Text>
 
           {goalsLoading && (
             <View style={{ padding: 20, alignItems: 'center' }}>

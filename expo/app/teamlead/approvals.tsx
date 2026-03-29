@@ -5,6 +5,7 @@ import { Check, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useColors } from '@/contexts/ThemeContext';
 import { Colors, getRateColor } from '@/constants/colors';
 import { useLogs } from '@/hooks/useData';
 import { updateLog } from '@/services/api';
@@ -12,6 +13,7 @@ import { formatNaira } from '@/utils/commission';
 
 export default function ApprovalsScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const queryClient = useQueryClient();
   const { data: allLogs, refetch, isRefetching } = useLogs();
 
@@ -39,15 +41,15 @@ export default function ApprovalsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={Colors.green} />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.green} />}
         >
-          <Text style={styles.title}>Pending Approvals</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Pending Approvals</Text>
 
           {pendingLogs.length === 0 ? (
             <View style={styles.empty}>

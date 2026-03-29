@@ -2,6 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Colors, getScoreColor } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { useReports } from '@/hooks/useData';
 import { formatTimestamp } from '@/utils/date';
 import { Clock, BarChart3, Youtube, BookOpen, Headphones, ExternalLink } from 'lucide-react-native';
@@ -26,6 +27,7 @@ function normalizeSkillKey(key: string): string {
 
 export default function ReportDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const colors = useColors();
   const { data: reports } = useReports();
 
   const report = useMemo(() => {
@@ -41,10 +43,10 @@ export default function ReportDetailScreen() {
 
   if (!report) {
     return (
-      <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Call Analysis', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Stack.Screen options={{ title: 'Call Analysis', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>Report not found</Text>
+          <Text style={[styles.emptyText, { color: colors.muted }]}>Report not found</Text>
         </View>
       </View>
     );
@@ -112,8 +114,8 @@ export default function ReportDetailScreen() {
   }, [skillBreakdown, metricsArray]);
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Call Analysis', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'Call Analysis', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.scoreSection}>
           <View style={[styles.scoreCircle, { borderColor: getScoreColor(score) }]}>

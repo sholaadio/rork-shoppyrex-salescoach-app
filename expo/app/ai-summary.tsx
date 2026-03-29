@@ -5,6 +5,7 @@ import { Sparkles } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { useUserReports, useTeamReports, useAllReports, useTeamMembers } from '@/hooks/useData';
 import { isManagementRole } from '@/types';
 import { Period } from '@/types';
@@ -12,6 +13,7 @@ import PeriodFilter from '@/components/PeriodFilter';
 
 export default function AISummaryScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const [period, setPeriod] = useState<Period>('month');
   const userReports = useUserReports(user?.id ?? '', period);
   const teamReports = useTeamReports(user?.teamId ?? '', period);
@@ -72,8 +74,8 @@ export default function AISummaryScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'AI Summary', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'AI Summary', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>✨ AI Summary Report</Text>
         <Text style={styles.subtitle}>AI-powered analysis of your call performance</Text>

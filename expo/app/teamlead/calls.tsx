@@ -10,6 +10,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useColors } from '@/contexts/ThemeContext';
 import { Colors, getScoreColor } from '@/constants/colors';
 import { useTeamType } from '@/hooks/useData';
 import { transcribeAudio, analyzeCall, submitReport } from '@/services/api';
@@ -19,6 +20,7 @@ const OUTCOMES = ['Confirmed', 'Pending', 'Rejected', 'Not Interested', 'Unknown
 
 export default function TeamLeadCallsScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const teamType = useTeamType(user?.teamId);
   const queryClient = useQueryClient();
 
@@ -68,10 +70,10 @@ export default function TeamLeadCallsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>My Own Calls</Text>
+          <Text style={[styles.title, { color: colors.text }]}>My Own Calls</Text>
           <Text style={styles.subtitle}>Upload and analyze your calls</Text>
 
           <View style={styles.formCard}>

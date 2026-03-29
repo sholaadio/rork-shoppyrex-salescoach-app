@@ -3,11 +3,13 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Refres
 import { Stack, useRouter } from 'expo-router';
 import { Search, Filter } from 'lucide-react-native';
 import { Colors, getScoreColor } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { getRoleBadgeColor } from '@/types';
 import { useReports, useUsersArray, useTeamsArray } from '@/hooks/useData';
 import { formatTimestamp } from '@/utils/date';
 
 export default function AnalysesScreen() {
+  const colors = useColors();
   const router = useRouter();
   const { data: allReports, refetch, isRefetching } = useReports();
   const allUsers = useUsersArray();
@@ -42,13 +44,13 @@ export default function AnalysesScreen() {
   }, [sorted]);
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'AI Analyses', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'AI Analyses', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={Colors.green} />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.green} />}
       >
         <Text style={styles.title}>🤖 AI Call Analyses</Text>
         <Text style={styles.subtitle}>

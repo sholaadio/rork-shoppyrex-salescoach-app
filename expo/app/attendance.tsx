@@ -3,12 +3,14 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-nati
 import { Stack } from 'expo-router';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { Colors, getRateColor } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { getInitials, getRoleBadgeColor, getRoleLabel } from '@/types';
 import { useUsersArray, useLogs } from '@/hooks/useData';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AttendanceScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const allUsers = useUsersArray();
   const { data: allLogs } = useLogs();
 
@@ -62,8 +64,8 @@ export default function AttendanceScreen() {
   }, [relevantUsers, allLogs, currentMonth, workdays]);
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Attendance', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'Attendance', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.title}>📅 Attendance</Text>

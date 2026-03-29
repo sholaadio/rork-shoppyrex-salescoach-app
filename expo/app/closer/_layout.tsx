@@ -1,21 +1,23 @@
 import { Tabs } from 'expo-router';
 import { Home, Mic, ClipboardList, Clock, MoreHorizontal } from 'lucide-react-native';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 
 export default function CloserLayout() {
+  const colors = useColors();
+
   return (
     <Tabs
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: Colors.background,
-          borderTopColor: Colors.border,
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
         },
-        tabBarActiveTintColor: Colors.green,
-        tabBarInactiveTintColor: Colors.muted,
+        tabBarActiveTintColor: colors.green,
+        tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-        headerStyle: { backgroundColor: Colors.background },
-        headerTintColor: Colors.text,
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: '700' },
         headerShadowVisible: false,
       }}

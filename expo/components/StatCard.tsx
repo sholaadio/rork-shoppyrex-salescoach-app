@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 
 interface StatCardProps {
   label: string;
@@ -11,14 +12,15 @@ interface StatCardProps {
 }
 
 export default React.memo(function StatCard({ label, value, accentColor, subtitle, icon }: StatCardProps) {
+  const colors = useColors();
   return (
-    <View style={[styles.card, { borderTopColor: accentColor }]}>
+    <View style={[styles.card, { borderTopColor: accentColor, backgroundColor: colors.card }]}>
       <View style={styles.header}>
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
         {icon}
       </View>
       <Text style={[styles.value, { color: accentColor }]}>{value}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      {subtitle ? <Text style={[styles.subtitle, { color: colors.muted }]}>{subtitle}</Text> : null}
     </View>
   );
 });

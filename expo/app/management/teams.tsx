@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, getScoreColor, getRateColor } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { Period, getInitials, getRoleLabel, getRoleBadgeColor } from '@/types';
 import { useUsersArray, useTeamsArray, useLogs, useReports } from '@/hooks/useData';
 import { isDateInPeriod, isTimestampInPeriod } from '@/utils/date';
@@ -9,6 +10,7 @@ import { formatNaira } from '@/utils/commission';
 import PeriodFilter from '@/components/PeriodFilter';
 
 export default function ManagementTeamsScreen() {
+  const colors = useColors();
   const [period, setPeriod] = useState<Period>('month');
   const allUsers = useUsersArray();
   const allTeams = useTeamsArray();
@@ -21,15 +23,15 @@ export default function ManagementTeamsScreen() {
   const onRefresh = () => { void rl(); void rr(); };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={r1 || r2} onRefresh={onRefresh} tintColor={Colors.green} />}
+          refreshControl={<RefreshControl refreshing={r1 || r2} onRefresh={onRefresh} tintColor={colors.green} />}
         >
-          <Text style={styles.title}>All Teams</Text>
+          <Text style={[styles.title, { color: colors.text }]}>All Teams</Text>
           <PeriodFilter selected={period} onSelect={setPeriod} />
 
           {allTeams.map(team => {

@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRateColor, getTierColor } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { useUserLogs, useTeamType } from '@/hooks/useData';
 import { getToday } from '@/utils/date';
 import { calculateCommission, formatNaira } from '@/utils/commission';
@@ -16,6 +17,7 @@ import { submitLog } from '@/services/api';
 
 export default function TeamLeadLogScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const teamType = useTeamType(user?.teamId);
   const queryClient = useQueryClient();
   const userLogs = useUserLogs(user?.id ?? '', 'all');
@@ -79,8 +81,8 @@ export default function TeamLeadLogScreen() {
   }, [userLogs]);
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'My Daily Log', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'My Daily Log', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>📋 My Daily Log</Text>
         <Text style={styles.subtitle}>Auto-approved for Team Leads</Text>

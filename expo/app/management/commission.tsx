@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, getRateColor } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { getInitials } from '@/types';
 import { useUsersArray, useTeamsArray, useLogs } from '@/hooks/useData';
 import { getCurrentMonth, getMonthLabel } from '@/utils/date';
@@ -9,6 +10,7 @@ import { formatNaira } from '@/utils/commission';
 import StatCard from '@/components/StatCard';
 
 export default function CommissionScreen() {
+  const colors = useColors();
   const allUsers = useUsersArray();
   const allTeams = useTeamsArray();
   const { data: allLogs, refetch, isRefetching } = useLogs();
@@ -45,15 +47,15 @@ export default function CommissionScreen() {
   const staffWithComm = useMemo(() => breakdown.filter(b => b.total > 0).length, [breakdown]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={Colors.green} />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.green} />}
         >
-          <Text style={styles.title}>Commission Report</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Commission Report</Text>
           <Text style={styles.subtitle}>Official payroll-ready breakdown · {getMonthLabel(month)}</Text>
 
           <View style={styles.statsRow}>

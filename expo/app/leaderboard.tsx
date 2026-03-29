@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Stack } from 'expo-router';
 import { Colors, getScoreColor, getRateColor } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { Period, getInitials, getRoleBadgeColor, getRoleLabel } from '@/types';
 import { useUsersArray, useTeamsArray, useLogs, useReports } from '@/hooks/useData';
 import { isDateInPeriod, isTimestampInPeriod } from '@/utils/date';
@@ -9,6 +10,7 @@ import { formatNaira } from '@/utils/commission';
 import PeriodFilter from '@/components/PeriodFilter';
 
 export default function LeaderboardScreen() {
+  const colors = useColors();
   const [period, setPeriod] = useState<Period>('month');
   const allUsers = useUsersArray();
   const allTeams = useTeamsArray();
@@ -54,13 +56,13 @@ export default function LeaderboardScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Leaderboard', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'Leaderboard', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={r1 || r2} onRefresh={() => { void rl(); void rr(); }} tintColor={Colors.green} />}
+        refreshControl={<RefreshControl refreshing={r1 || r2} onRefresh={() => { void rl(); void rr(); }} tintColor={colors.green} />}
       >
         <Text style={styles.title}>🏆 Leaderboard</Text>
         <PeriodFilter selected={period} onSelect={setPeriod} />

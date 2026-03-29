@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } 
 import { Stack } from 'expo-router';
 import { ChevronLeft, ChevronRight, FileText } from 'lucide-react-native';
 import { Colors, getRateColor, getTierColor } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { getInitials, getRoleBadgeColor } from '@/types';
 import { useUsersArray, useTeamsArray, useLogs } from '@/hooks/useData';
 import { getMonthLabel } from '@/utils/date';
@@ -10,6 +11,7 @@ import { formatNaira } from '@/utils/commission';
 import StatCard from '@/components/StatCard';
 
 export default function PayReportScreen() {
+  const colors = useColors();
   const allUsers = useUsersArray();
   const allTeams = useTeamsArray();
   const { data: allLogs, refetch, isRefetching } = useLogs();
@@ -65,13 +67,13 @@ export default function PayReportScreen() {
   }, [allTeams, breakdown]);
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Pay Report', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'Pay Report', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={Colors.green} />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.green} />}
       >
         <View style={styles.headerRow}>
           <View>

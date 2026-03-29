@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { useNoAnswers } from '@/hooks/useData';
 import { submitNoAnswer } from '@/services/api';
 import { formatTimestamp } from '@/utils/date';
@@ -16,6 +17,7 @@ const REASONS = ['Switched Off', 'Not Reachable', 'Busy', 'No Answer', 'Wrong Nu
 
 export default function NoAnswerScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const queryClient = useQueryClient();
   const { data: noAnswers } = useNoAnswers();
 
@@ -56,8 +58,8 @@ export default function NoAnswerScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'No Answer', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'No Answer', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>📵 Log No-Answer</Text>
 

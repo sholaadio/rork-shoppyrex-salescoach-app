@@ -9,12 +9,14 @@ import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors } from '@/constants/colors';
+import { useColors } from '@/contexts/ThemeContext';
 import { getInitials, getRoleLabel, getRoleBadgeColor } from '@/types';
 import { useUsersArray } from '@/hooks/useData';
 import { updateUser } from '@/services/api';
 
 export default function RolesScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const queryClient = useQueryClient();
   const allUsers = useUsersArray();
 
@@ -49,8 +51,8 @@ export default function RolesScreen() {
 
   if (!isCeoOrGm) {
     return (
-      <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Roles & Permissions', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Stack.Screen options={{ title: 'Roles & Permissions', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
         <View style={styles.restricted}>
           <ShieldCheck size={48} color={Colors.muted} />
           <Text style={styles.restrictedTitle}>Access Restricted</Text>
@@ -61,8 +63,8 @@ export default function RolesScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Roles & Permissions', headerStyle: { backgroundColor: Colors.background }, headerTintColor: Colors.text }} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ title: 'Roles & Permissions', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>🔐 Roles & Permissions</Text>
         <Text style={styles.subtitle}>Reset PINs and manage staff access</Text>

@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useColors } from '@/contexts/ThemeContext';
 import { Colors, getRateColor, getTierColor } from '@/constants/colors';
 import { useUserLogs, useTeamType } from '@/hooks/useData';
 import { getToday } from '@/utils/date';
@@ -16,6 +17,7 @@ import { submitLog } from '@/services/api';
 
 export default function DailyLogScreen() {
   const { user } = useAuth();
+  const colors = useColors();
   const teamType = useTeamType(user?.teamId);
   const queryClient = useQueryClient();
   const userLogs = useUserLogs(user?.id ?? '', 'all');
@@ -79,10 +81,10 @@ export default function DailyLogScreen() {
   }, [userLogs]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Daily Log</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Daily Log</Text>
 
           <View style={styles.formCard}>
             <Text style={styles.formLabel}>📋 Daily Order Log</Text>

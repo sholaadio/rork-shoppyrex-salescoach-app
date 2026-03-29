@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AlertCircle, TrendingUp, Phone, Star, Banknote, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useColors } from '@/contexts/ThemeContext';
 import { Colors, getScoreColor, getRateColor } from '@/constants/colors';
 import { Period, getInitials } from '@/types';
 import { useUserLogs, useUserReports, useUserGoals, useTeamName, useLogs, useReports } from '@/hooks/useData';
@@ -14,6 +15,7 @@ import PeriodFilter from '@/components/PeriodFilter';
 
 export default function CloserDashboard() {
   const { user } = useAuth();
+  const colors = useColors();
   const router = useRouter();
   const [period, setPeriod] = useState<Period>('month');
   const teamName = useTeamName(user?.teamId);
@@ -66,20 +68,20 @@ export default function CloserDashboard() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={lr || rr} onRefresh={onRefresh} tintColor={Colors.green} />}
+          refreshControl={<RefreshControl refreshing={lr || rr} onRefresh={onRefresh} tintColor={colors.green} />}
         >
           <View style={styles.header}>
             <View>
-              <Text style={styles.greeting}>{getGreeting()}, {firstName} 👋</Text>
-              <Text style={styles.teamLabel}>{teamName}</Text>
+              <Text style={[styles.greeting, { color: colors.text }]}>{getGreeting()}, {firstName} 👋</Text>
+              <Text style={[styles.teamLabel, { color: colors.muted }]}>{teamName}</Text>
             </View>
-            <View style={styles.avatar}>
+            <View style={[styles.avatar, { backgroundColor: colors.green }]}>
               <Text style={styles.avatarText}>{getInitials(user?.name ?? '')}</Text>
             </View>
           </View>
