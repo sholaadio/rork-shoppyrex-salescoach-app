@@ -65,13 +65,15 @@ export async function fetchReports(): Promise<CallReport[]> {
 
 export async function fetchGoals(): Promise<Goal[]> {
   console.log('[API] Fetching goals from Supabase...');
-  const { data, error } = await supabase.from('sc_goals').select('*').order('createdAt', { ascending: false });
+  const { data, error } = await supabase.from('sc_goals').select('*');
   if (error) {
     console.log('[API] Supabase goals error:', error.message);
     throw new Error('Failed to fetch goals');
   }
   console.log('[API] Goals fetched:', data?.length ?? 0);
-  return (data ?? []).map(mapGoal);
+  const mapped = (data ?? []).map(mapGoal).filter(g => g.id);
+  console.log('[API] Goals mapped:', mapped.length, mapped.map(g => ({ id: g.id, month: g.month, userId: g.userId, type: g.type })));
+  return mapped;
 }
 
 export async function fetchNoAnswers(): Promise<NoAnswerLog[]> {
@@ -149,7 +151,19 @@ export async function deleteNoAnswer(id: string): Promise<void> {
 export async function submitGoal(goal: Partial<Goal>): Promise<Goal> {
   console.log('[API] Submitting goal to Supabase...');
   const id = goal.id || `goal_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const row = { ...goal, id };
+  const goalData: Record<string, any> = {
+    type: goal.userId === 'company' ? 'company' : goal.userId?.startsWith('team:') ? 'team' : 'individual',
+    label: goal.label ?? '',
+    metric: goal.type ?? 'delivered',
+    target: goal.target ?? 0,
+    current: 0,
+    setBy: goal.setBy ?? '',
+    month: goal.month ?? '',
+    teamId: goal.userId?.startsWith('team:') ? goal.userId.replace('team:', '') : undefined,
+    memberId: (!goal.userId?.startsWith('team:') && goal.userId !== 'company') ? goal.userId : undefined,
+  };
+  const row = { id, data: goalData };
+  console.log('[API] Inserting goal row:', JSON.stringify(row));
   const { data, error } = await supabase.from('sc_goals').insert(row).select().single();
   if (error) {
     console.log('[API] Supabase submit goal error:', error.message);
@@ -291,14 +305,36 @@ function mapNoAnswer(row: any): NoAnswerLog {
 }
 
 function mapGoal(row: any): Goal {
+  const d = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+  if (!d) {
+    console.log('[API] Goal row has no data field:', row.id);
+    return {
+      id: row.id,
+      month: row.month ?? '',
+      type: row.type ?? 'delivered',
+      target: row.target ?? 0,
+      label: row.label ?? '',
+      setBy: row.setBy ?? '',
+      createdAt: row.createdAt ?? 0,
+      userId: row.userId ?? '',
+    };
+  }
+  let userId = '';
+  if (d.type === 'company') {
+    userId = 'company';
+  } else if (d.type === 'team') {
+    userId = `team:${d.teamId ?? ''}`;
+  } else {
+    userId = d.memberId ?? '';
+  }
   return {
     id: row.id,
-    month: row.month,
-    type: row.type,
-    target: row.target ?? 0,
-    label: row.label ?? '',
-    setBy: row.setBy ?? '',
-    createdAt: row.createdAt ?? 0,
-    userId: row.userId ?? '',
+    month: d.month ?? '',
+    type: d.metric ?? d.type ?? 'delivered',
+    target: d.target ?? 0,
+    label: d.label ?? '',
+    setBy: d.setBy ?? '',
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
+    userId,
   };
 }
