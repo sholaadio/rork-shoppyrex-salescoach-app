@@ -13,11 +13,14 @@ import { formatNaira } from '@/utils/commission';
 import StatCard from '@/components/StatCard';
 import PeriodFilter from '@/components/PeriodFilter';
 
+type GoalTab = 'company' | 'team' | 'personal';
+
 export default function CloserDashboard() {
   const { user } = useAuth();
   const colors = useColors();
   const router = useRouter();
   const [period, setPeriod] = useState<Period>('month');
+  const [goalTab, setGoalTab] = useState<GoalTab>('company');
   const teamName = useTeamName(user?.teamId);
 
   const userLogs = useUserLogs(user?.id ?? '', period);
@@ -61,6 +64,12 @@ export default function CloserDashboard() {
   }, [userReports]);
 
   const firstName = user?.name?.split(' ').pop() ?? '';
+
+  const companyGoals = useMemo(() => allUserGoals.filter(g => g.userId === 'company'), [allUserGoals]);
+  const teamGoals = useMemo(() => allUserGoals.filter(g => g.userId === `team:${user?.teamId}`), [allUserGoals, user?.teamId]);
+  const personalGoals = useMemo(() => allUserGoals.filter(g => g.userId === user?.id), [allUserGoals, user?.id]);
+
+  const activeGoals = goalTab === 'company' ? companyGoals : goalTab === 'team' ? teamGoals : personalGoals;
 
   const onRefresh = () => {
     void refetchLogs();
@@ -180,7 +189,42 @@ export default function CloserDashboard() {
           {allUserGoals.length > 0 && (
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>🎯 Monthly Goals</Text>
-              {allUserGoals.map(goal => {
+              <View style={[styles.goalTabs, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                {([
+                  { key: 'company' as GoalTab, label: '🏢 Company', count: companyGoals.length },
+                  { key: 'team' as GoalTab, label: '👥 Team', count: teamGoals.length },
+                  { key: 'personal' as GoalTab, label: '👤 Personal', count: personalGoals.length },
+                ]).map(tab => (
+                  <TouchableOpacity
+                    key={tab.key}
+                    style={[
+                      styles.goalTabBtn,
+                      goalTab === tab.key && { backgroundColor: colors.orange + '18' },
+                    ]}
+                    onPress={() => setGoalTab(tab.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[
+                      styles.goalTabLabel,
+                      { color: goalTab === tab.key ? colors.orange : colors.muted },
+                    ]}>
+                      {tab.label}
+                    </Text>
+                    {tab.count > 0 && (
+                      <View style={[
+                        styles.goalBadge,
+                        { backgroundColor: goalTab === tab.key ? colors.orange : colors.muted + '40' },
+                      ]}>
+                        <Text style={[
+                          styles.goalBadgeText,
+                          { color: goalTab === tab.key ? '#fff' : colors.muted },
+                        ]}>{tab.count}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {activeGoals.length > 0 ? activeGoals.map(goal => {
                 const progress = getGoalProgress(goal, stats, approvedLogs);
                 const pct = goal.target > 0 ? Math.min(Math.round((progress / goal.target) * 100), 100) : 0;
                 return (
@@ -199,7 +243,11 @@ export default function CloserDashboard() {
                     <Text style={[styles.goalPct, { color: colors.muted }]}>{pct}% complete</Text>
                   </View>
                 );
-              })}
+              }) : (
+                <View style={[styles.emptyGoals, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <Text style={[styles.emptyGoalsText, { color: colors.muted }]}>No goals set for this period</Text>
+                </View>
+              )}
             </View>
           )}
 
@@ -301,6 +349,13 @@ const styles = StyleSheet.create({
   goalLabel: { fontSize: 13, fontWeight: '700' as const, flex: 1, marginRight: 8 },
   goalProgress: { fontSize: 13 },
   goalPct: { fontSize: 11, marginTop: 4 },
+  goalTabs: { flexDirection: 'row' as const, borderRadius: 10, borderWidth: 1, padding: 3, marginBottom: 10, gap: 3 },
+  goalTabBtn: { flex: 1, flexDirection: 'row' as const, alignItems: 'center' as const, justifyContent: 'center' as const, paddingVertical: 8, borderRadius: 8, gap: 5 },
+  goalTabLabel: { fontSize: 12, fontWeight: '600' as const },
+  goalBadge: { minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center' as const, justifyContent: 'center' as const, paddingHorizontal: 4 },
+  goalBadgeText: { fontSize: 10, fontWeight: '700' as const },
+  emptyGoals: { borderRadius: 10, padding: 24, borderWidth: 1, alignItems: 'center' as const },
+  emptyGoalsText: { fontSize: 13 },
   callCard: {
     flexDirection: 'row', alignItems: 'center', borderRadius: 10, padding: 12,
     marginBottom: 6, borderWidth: 1, gap: 12,
