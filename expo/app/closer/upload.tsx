@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mic, Upload, ChevronDown, Bot, Sparkles } from 'lucide-react-native';
+import { Mic, Upload, ChevronDown, Bot, Sparkles, Package } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -37,6 +38,7 @@ export default function UploadCallScreen() {
   const colors = useColors();
   const teamType = useTeamType(user?.teamId);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const [callType, setCallType] = useState('Phone Call');
   const [outcome, setOutcome] = useState('Unknown');
@@ -272,6 +274,19 @@ export default function UploadCallScreen() {
           <Text style={[styles.title, { color: colors.text }]}>Upload a Call</Text>
           <Text style={[styles.subtitle, { color: colors.muted }]}>AI will transcribe, analyze and coach you</Text>
 
+          <TouchableOpacity
+            style={[styles.bulkButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => router.push('/bulk-upload' as any)}
+            activeOpacity={0.7}
+          >
+            <Package size={20} color={colors.orange} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.bulkButtonTitle, { color: colors.text }]}>📦 Bulk Upload</Text>
+              <Text style={[styles.bulkButtonSub, { color: colors.muted }]}>Upload & analyze multiple calls at once</Text>
+            </View>
+            <ChevronDown size={16} color={colors.muted} style={{ transform: [{ rotate: '-90deg' }] }} />
+          </TouchableOpacity>
+
           <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.row}>
               <View style={styles.field}>
@@ -476,5 +491,10 @@ const styles = StyleSheet.create({
   tipText: {
     fontSize: 13, textAlign: 'center' as const, marginTop: 32, lineHeight: 20,
   },
-
+  bulkButton: {
+    flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12,
+    borderRadius: 14, padding: 14, borderWidth: 1, marginBottom: 16,
+  },
+  bulkButtonTitle: { fontSize: 15, fontWeight: '700' as const },
+  bulkButtonSub: { fontSize: 11, marginTop: 2 },
 });

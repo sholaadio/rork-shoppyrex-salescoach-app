@@ -42,6 +42,7 @@ function RootLayoutNav() {
         <Stack.Screen name="analyses" options={{ title: "AI Analyses", presentation: "modal" }} />
         <Stack.Screen name="commission-rules" options={{ title: "Commission Rules", presentation: "modal" }} />
         <Stack.Screen name="teamlead-log" options={{ title: "My Daily Log", presentation: "modal" }} />
+        <Stack.Screen name="bulk-upload" options={{ title: "Bulk Upload", presentation: "modal" }} />
       </Stack>
     </>
   );
