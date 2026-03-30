@@ -212,7 +212,7 @@ export default function LoginScreen() {
         >
           <View style={styles.welcomeHeader}>
             <Image
-              source={require('@/assets/images/shoppyrex-logo.png')}
+              source={{ uri: 'https://r2-pub.rork.com/generated-images/4c404a99-156b-45db-88b1-ec4bcbaeb88f.png' }}
               style={styles.miniLogo}
               resizeMode="contain"
             />
@@ -251,7 +251,7 @@ export default function LoginScreen() {
         >
           <View style={styles.welcomeHeader}>
             <Image
-              source={require('@/assets/images/shoppyrex-logo.png')}
+              source={{ uri: 'https://r2-pub.rork.com/generated-images/4c404a99-156b-45db-88b1-ec4bcbaeb88f.png' }}
               style={styles.miniLogo}
               resizeMode="contain"
             />
@@ -292,7 +292,7 @@ export default function LoginScreen() {
         >
           <View style={styles.idHeader}>
             <Image
-              source={require('@/assets/images/shoppyrex-logo.png')}
+              source={{ uri: 'https://r2-pub.rork.com/generated-images/4c404a99-156b-45db-88b1-ec4bcbaeb88f.png' }}
               style={styles.headerLogo}
               resizeMode="contain"
             />
