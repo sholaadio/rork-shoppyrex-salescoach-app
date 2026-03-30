@@ -3,7 +3,9 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import SessionGuard from "@/components/SessionGuard";
@@ -24,6 +26,9 @@ function RootLayoutNav() {
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
           contentStyle: { backgroundColor: colors.background },
+          headerBackButtonDisplayMode: 'minimal',
+          headerTitleStyle: { fontWeight: '600' as const },
+          ...(Platform.OS === 'android' ? { statusBarTranslucent: true } : {}),
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -55,15 +60,17 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider>
-          <AuthProvider>
-            <SessionGuard>
-              <RootLayoutNav />
-            </SessionGuard>
-          </AuthProvider>
-        </ThemeProvider>
-      </GestureHandlerRootView>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <ThemeProvider>
+            <AuthProvider>
+              <SessionGuard>
+                <RootLayoutNav />
+              </SessionGuard>
+            </AuthProvider>
+          </ThemeProvider>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
     </QueryClientProvider>
   );
 }
