@@ -184,7 +184,7 @@ export default function TeamLeadGoalsScreen() {
           {teamGoals.length > 0 && (
             <View style={styles.section}>
               <Text style={[styles.sectionLabel, { color: colors.blue }]}>👥 Team Goals — {teamName}</Text>
-              {teamGoals.map(g => <GoalCard key={g.id} goal={g} progress={getProgress(g)} pendingDeletion={pendingDeletionIds.includes(g.id)} onRequestRemove={() => requestRemoveMutation.mutate({ goalId: g.id, goalLabel: g.label })} colors={colors} />)}
+              {teamGoals.map(g => <GoalCard key={g.id} goal={g} progress={getProgress(g)} colors={colors} />)}
             </View>
           )}
 
@@ -193,8 +193,9 @@ export default function TeamLeadGoalsScreen() {
               <Text style={[styles.sectionLabel, { color: colors.purple }]}>👤 Individual Member Goals</Text>
               {memberGoals.map(g => {
                 const member = teamMembers.find(m => m.id === g.userId);
+                const canRequestRemove = g.setBy === user?.id;
                 return (
-                  <GoalCard key={g.id} goal={g} progress={getProgress(g)} memberName={member?.name} pendingDeletion={pendingDeletionIds.includes(g.id)} onRequestRemove={() => requestRemoveMutation.mutate({ goalId: g.id, goalLabel: g.label })} colors={colors} />
+                  <GoalCard key={g.id} goal={g} progress={getProgress(g)} memberName={member?.name} pendingDeletion={canRequestRemove ? pendingDeletionIds.includes(g.id) : false} onRequestRemove={canRequestRemove ? () => requestRemoveMutation.mutate({ goalId: g.id, goalLabel: g.label }) : undefined} colors={colors} />
                 );
               })}
             </View>

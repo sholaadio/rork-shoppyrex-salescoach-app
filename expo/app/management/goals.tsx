@@ -119,7 +119,8 @@ export default function ManagementGoalsScreen() {
     onError: (err) => Alert.alert('Error', err instanceof Error ? err.message : 'Failed'),
   });
 
-  const canDeleteDirectly = ['ceo', 'gm'].includes(user?.role ?? '');
+  const isCeoOrGm = ['ceo', 'gm'].includes(user?.role ?? '');
+  const isHeadSales = user?.role === 'head_sales';
 
   const allGoalIds = useMemo(() => {
     const ids: string[] = [];
@@ -132,7 +133,7 @@ export default function ManagementGoalsScreen() {
   const { data: pendingDeletionIds = [] } = useQuery({
     queryKey: ['pendingDeletions', 'management', allGoalIds],
     queryFn: () => getPendingDeletionRequests(allGoalIds),
-    enabled: allGoalIds.length > 0 && !canDeleteDirectly,
+    enabled: allGoalIds.length > 0 && !isCeoOrGm,
   });
 
   const removeMutation = useMutation({
@@ -192,7 +193,7 @@ export default function ManagementGoalsScreen() {
 
           {companyGoals.length > 0 && (
             <Section title="🏢 Company Target" color={colors.orange}>
-              {companyGoals.map(g => <GoalItem key={g.id} goal={g} progress={getProgress(g)} onRemove={canDeleteDirectly ? () => removeMutation.mutate(g.id) : undefined} pendingDeletion={pendingDeletionIds.includes(g.id)} onRequestRemove={canSetGoals && !canDeleteDirectly ? () => requestRemoveMutation.mutate({ goalId: g.id, goalLabel: g.label }) : undefined} colors={colors} />)}
+              {companyGoals.map(g => <GoalItem key={g.id} goal={g} progress={getProgress(g)} onRemove={isCeoOrGm ? () => removeMutation.mutate(g.id) : undefined} pendingDeletion={false} colors={colors} />)}
             </Section>
           )}
 
@@ -201,7 +202,9 @@ export default function ManagementGoalsScreen() {
               {teamGoals.map(g => {
                 const tid = g.userId.replace('team:', '');
                 const team = allTeams.find(t => t.id === tid);
-                return <GoalItem key={g.id} goal={g} progress={getProgress(g)} subtitle={team?.name} onRemove={canDeleteDirectly ? () => removeMutation.mutate(g.id) : undefined} pendingDeletion={pendingDeletionIds.includes(g.id)} onRequestRemove={canSetGoals && !canDeleteDirectly ? () => requestRemoveMutation.mutate({ goalId: g.id, goalLabel: g.label }) : undefined} colors={colors} />;
+                const canDirectDelete = isCeoOrGm;
+                const canRequestRemove = isHeadSales && g.setBy === user?.id;
+                return <GoalItem key={g.id} goal={g} progress={getProgress(g)} subtitle={team?.name} onRemove={canDirectDelete ? () => removeMutation.mutate(g.id) : undefined} pendingDeletion={pendingDeletionIds.includes(g.id)} onRequestRemove={canRequestRemove ? () => requestRemoveMutation.mutate({ goalId: g.id, goalLabel: g.label }) : undefined} colors={colors} />;
               })}
             </Section>
           )}
@@ -210,7 +213,8 @@ export default function ManagementGoalsScreen() {
             <Section title="👤 Individual Member Goals" color={colors.purple}>
               {individualGoals.map(g => {
                 const member = allUsers.find(u => u.id === g.userId);
-                return <GoalItem key={g.id} goal={g} progress={getProgress(g)} subtitle={member?.name} onRemove={canDeleteDirectly ? () => removeMutation.mutate(g.id) : undefined} pendingDeletion={pendingDeletionIds.includes(g.id)} onRequestRemove={canSetGoals && !canDeleteDirectly ? () => requestRemoveMutation.mutate({ goalId: g.id, goalLabel: g.label }) : undefined} colors={colors} />;
+                const canDirectDelete = isCeoOrGm || isHeadSales;
+                return <GoalItem key={g.id} goal={g} progress={getProgress(g)} subtitle={member?.name} onRemove={canDirectDelete ? () => removeMutation.mutate(g.id) : undefined} pendingDeletion={false} colors={colors} />;
               })}
             </Section>
           )}

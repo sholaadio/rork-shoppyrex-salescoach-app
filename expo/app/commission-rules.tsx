@@ -334,12 +334,7 @@ export default function CommissionRulesScreen() {
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
           headerShadowVisible: false,
-          headerRight: () =>
-            canEdit && !isEditing ? (
-              <TouchableOpacity onPress={startEditing} style={styles.headerBtn} activeOpacity={0.7}>
-                <Edit3 size={18} color={colors.green} />
-              </TouchableOpacity>
-            ) : null,
+          headerRight: () => null,
         }}
       />
       <ScrollView
@@ -349,6 +344,17 @@ export default function CommissionRulesScreen() {
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.green} />}
       >
         <Animated.View style={{ opacity: fadeAnim }}>
+          {canEdit && !isEditing && (
+            <TouchableOpacity
+              style={[styles.editFullBtn, { backgroundColor: colors.green + '15', borderColor: colors.green + '40' }]}
+              onPress={startEditing}
+              activeOpacity={0.7}
+            >
+              <Edit3 size={18} color={colors.green} />
+              <Text style={[styles.editFullBtnText, { color: colors.green }]}>✏️ Edit Commission Rates</Text>
+            </TouchableOpacity>
+          )}
+
           {isEditing && (
             <View style={[styles.warningBanner, { backgroundColor: colors.yellow + '15', borderColor: colors.yellow + '40' }]}>
               <AlertTriangle size={16} color={colors.yellow} />
@@ -559,7 +565,18 @@ const styles = StyleSheet.create({
   emptyDesc: { fontSize: 13, marginTop: 6, textAlign: 'center' as const },
   primaryBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10, marginTop: 20 },
   primaryBtnText: { color: '#fff', fontWeight: '700' as const, fontSize: 15 },
-  headerBtn: { padding: 8 },
+  editFullBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 14,
+    minHeight: 48,
+    marginBottom: 16,
+  },
+  editFullBtnText: { fontSize: 15, fontWeight: '700' as const },
   warningBanner: {
     flexDirection: 'row',
     alignItems: 'center',
