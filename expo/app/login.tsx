@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView,
-  Platform, ActivityIndicator, Animated, Image,
+  Platform, ActivityIndicator, Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronRight, LogOut, Delete } from 'lucide-react-native';
@@ -192,6 +192,20 @@ export default function LoginScreen() {
     </View>
   );
 
+  const renderBrandMark = (size: 'small' | 'normal' = 'normal') => {
+    const circleSize = size === 'small' ? 36 : 44;
+    const fontSize = size === 'small' ? 18 : 22;
+    const textSize = size === 'small' ? 18 : 22;
+    return (
+      <View style={styles.brandMark}>
+        <View style={[styles.brandCircle, { width: circleSize, height: circleSize, borderRadius: circleSize / 2 }]}>
+          <Text style={[styles.brandCircleLetter, { fontSize }]}>S</Text>
+        </View>
+        <Text style={[styles.brandText, { color: colors.text, fontSize: textSize }]}>SalesCoach</Text>
+      </View>
+    );
+  };
+
   const renderAvatarCircle = (name: string, size: number) => {
     const initials = getInitials(name);
     return (
@@ -211,11 +225,7 @@ export default function LoginScreen() {
           ]}
         >
           <View style={styles.welcomeHeader}>
-            <Image
-              source={{ uri: 'https://r2-pub.rork.com/generated-images/4c404a99-156b-45db-88b1-ec4bcbaeb88f.png' }}
-              style={styles.miniLogo}
-              resizeMode="contain"
-            />
+            {renderBrandMark('small')}
             <Text style={[styles.welcomeLabel, { color: colors.muted }]}>Welcome back</Text>
             {renderAvatarCircle(savedProfile.name, 80)}
             <Text style={[styles.welcomeName, { color: colors.text }]}>{savedProfile.name}</Text>
@@ -250,11 +260,8 @@ export default function LoginScreen() {
           ]}
         >
           <View style={styles.welcomeHeader}>
-            <Image
-              source={{ uri: 'https://r2-pub.rork.com/generated-images/4c404a99-156b-45db-88b1-ec4bcbaeb88f.png' }}
-              style={styles.miniLogo}
-              resizeMode="contain"
-            />
+            {renderBrandMark('small')}
+            <View style={{ height: 16 }} />
             {renderAvatarCircle(lookedUpName || employeeId, 72)}
             <Text style={[styles.welcomeName, { color: colors.text, fontSize: 22 }]}>
               {lookedUpName || employeeId}
@@ -291,12 +298,7 @@ export default function LoginScreen() {
           ]}
         >
           <View style={styles.idHeader}>
-            <Image
-              source={{ uri: 'https://r2-pub.rork.com/generated-images/4c404a99-156b-45db-88b1-ec4bcbaeb88f.png' }}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-            <Text style={[styles.idTitle, { color: colors.text }]}>SalesCoach</Text>
+            {renderBrandMark()}
             <Text style={[styles.idSubtitle, { color: colors.muted }]}>
               Sign in to continue
             </Text>
@@ -368,10 +370,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  miniLogo: {
-    width: 56,
-    height: 56,
+  brandMark: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     marginBottom: 20,
+  },
+  brandCircle: {
+    backgroundColor: '#F97316',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  brandCircleLetter: {
+    color: '#FFFFFF',
+    fontWeight: '800' as const,
+  },
+  brandText: {
+    fontWeight: '800' as const,
+    letterSpacing: -0.5,
   },
   welcomeLabel: {
     fontSize: 15,
@@ -470,16 +486,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 36,
   },
-  headerLogo: {
-    width: 80,
-    height: 80,
-    marginBottom: 12,
-  },
-  idTitle: {
-    fontSize: 28,
-    fontWeight: '800' as const,
-    letterSpacing: -0.5,
-  },
+
   idSubtitle: {
     fontSize: 15,
     marginTop: 4,
