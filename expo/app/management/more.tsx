@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Calendar, Trophy, Sparkles, LogOut, BarChart3, UserCog, ShieldCheck, FileText, KeyRound, Sun, Moon } from 'lucide-react-native';
+import { Calendar, Trophy, Sparkles, LogOut, BarChart3, UserCog, ShieldCheck, FileText, KeyRound, Sun, Moon, Banknote } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, useColors } from '@/contexts/ThemeContext';
@@ -24,6 +24,7 @@ export default function ManagementMoreScreen() {
     { label: 'Manage Staff', icon: UserCog, route: '/manage-staff', color: colors.pink },
     { label: 'Roles & Permissions', icon: ShieldCheck, route: '/roles', color: colors.red },
     { label: 'AI Summary', icon: Sparkles, route: '/ai-summary', color: colors.purple },
+    { label: 'Commission Rules', icon: Banknote, route: '/commission-rules', color: colors.green },
   ];
 
   const handleLogout = () => {

@@ -40,6 +40,7 @@ function RootLayoutNav() {
         <Stack.Screen name="roles" options={{ title: "Roles & Permissions", presentation: "modal" }} />
         <Stack.Screen name="pay-report" options={{ title: "Pay Report", presentation: "modal" }} />
         <Stack.Screen name="analyses" options={{ title: "AI Analyses", presentation: "modal" }} />
+        <Stack.Screen name="commission-rules" options={{ title: "Commission Rules", presentation: "modal" }} />
         <Stack.Screen name="teamlead-log" options={{ title: "My Daily Log", presentation: "modal" }} />
       </Stack>
     </>
