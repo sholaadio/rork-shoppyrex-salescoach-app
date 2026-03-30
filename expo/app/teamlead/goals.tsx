@@ -5,13 +5,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronDown } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/contexts/ThemeContext';
 import { ThemeColors } from '@/constants/colors';
 import { useGoals, useTeamMembers, useTeamName, useLogs } from '@/hooks/useData';
 import { getCurrentMonth, getMonthLabel } from '@/utils/date';
-import { submitGoal, deleteGoal } from '@/services/api';
+import { submitGoal, requestGoalDeletion, getPendingDeletionRequests } from '@/services/api';
 
 const GOAL_TYPES = [
   { key: 'delivered', label: 'Orders Delivered' },
@@ -111,9 +111,35 @@ export default function TeamLeadGoalsScreen() {
     onError: (err) => Alert.alert('Error', err instanceof Error ? err.message : 'Failed'),
   });
 
-  const removeMutation = useMutation({
-    mutationFn: deleteGoal,
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['goals'] }),
+  const allGoalIds = useMemo(() => {
+    const ids: string[] = [];
+    if (teamGoals) ids.push(...teamGoals.map(g => g.id));
+    if (memberGoals) ids.push(...memberGoals.map(g => g.id));
+    return ids;
+  }, [teamGoals, memberGoals]);
+
+  const { data: pendingDeletionIds = [] } = useQuery({
+    queryKey: ['pendingDeletions', 'teamlead', allGoalIds],
+    queryFn: () => getPendingDeletionRequests(allGoalIds),
+    enabled: allGoalIds.length > 0,
+  });
+
+  const requestRemoveMutation = useMutation({
+    mutationFn: (params: { goalId: string; goalLabel: string }) =>
+      requestGoalDeletion({
+        goalId: params.goalId,
+        goalLabel: params.goalLabel,
+        requestedBy: user?.id ?? '',
+        requestedByName: user?.name ?? '',
+        requestedByRole: 'teamlead',
+        approverRole: 'head_sales',
+      }),
+    onSuccess: () => {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Sent', 'Deletion request sent to Head of Sales for approval');
+      void queryClient.invalidateQueries({ queryKey: ['pendingDeletions'] });
+    },
+    onError: (err) => Alert.alert('Error', err instanceof Error ? err.message : 'Failed to request deletion'),
   });
 
   return (
@@ -158,7 +184,7 @@ export default function TeamLeadGoalsScreen() {
           {teamGoals.length > 0 && (
             <View style={styles.section}>
               <Text style={[styles.sectionLabel, { color: colors.blue }]}>👥 Team Goals — {teamName}</Text>
-              {teamGoals.map(g => <GoalCard key={g.id} goal={g} progress={getProgress(g)} onRemove={() => removeMutation.mutate(g.id)} colors={colors} />)}
+              {teamGoals.map(g => <GoalCard key={g.id} goal={g} progress={getProgress(g)} pendingDeletion={pendingDeletionIds.includes(g.id)} onRequestRemove={() => requestRemoveMutation.mutate({ goalId: g.id, goalLabel: g.label })} colors={colors} />)}
             </View>
           )}
 
@@ -168,7 +194,7 @@ export default function TeamLeadGoalsScreen() {
               {memberGoals.map(g => {
                 const member = teamMembers.find(m => m.id === g.userId);
                 return (
-                  <GoalCard key={g.id} goal={g} progress={getProgress(g)} memberName={member?.name} onRemove={() => removeMutation.mutate(g.id)} colors={colors} />
+                  <GoalCard key={g.id} goal={g} progress={getProgress(g)} memberName={member?.name} pendingDeletion={pendingDeletionIds.includes(g.id)} onRequestRemove={() => requestRemoveMutation.mutate({ goalId: g.id, goalLabel: g.label })} colors={colors} />
                 );
               })}
             </View>
@@ -229,7 +255,7 @@ export default function TeamLeadGoalsScreen() {
   );
 }
 
-function GoalCard({ goal, progress, memberName, onRemove, colors }: { goal: any; progress: number; memberName?: string; onRemove?: () => void; colors: ThemeColors }) {
+function GoalCard({ goal, progress, memberName, pendingDeletion, onRequestRemove, colors }: { goal: any; progress: number; memberName?: string; pendingDeletion?: boolean; onRequestRemove?: () => void; colors: ThemeColors }) {
   const pct = goal.target > 0 ? Math.min(Math.round((progress / goal.target) * 100), 100) : 0;
   return (
     <View style={[gcStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -238,10 +264,16 @@ function GoalCard({ goal, progress, memberName, onRemove, colors }: { goal: any;
           <Text style={[gcStyles.label, { color: colors.text }]}>{goal.label}</Text>
           {memberName && <Text style={[gcStyles.member, { color: colors.muted }]}>{memberName}</Text>}
         </View>
-        {onRemove && (
-          <TouchableOpacity onPress={onRemove}>
-            <Text style={[gcStyles.remove, { color: colors.red }]}>✕ Remove</Text>
-          </TouchableOpacity>
+        {onRequestRemove && (
+          pendingDeletion ? (
+            <View style={{ opacity: 0.6 }}>
+              <Text style={[gcStyles.remove, { color: colors.muted }]}>⏳ Pending</Text>
+            </View>
+          ) : (
+            <TouchableOpacity onPress={onRequestRemove}>
+              <Text style={[gcStyles.remove, { color: colors.orange }]}>⏳ Request Remove</Text>
+            </TouchableOpacity>
+          )
         )}
       </View>
       <View style={gcStyles.progressRow}>

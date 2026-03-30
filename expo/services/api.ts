@@ -252,6 +252,47 @@ export async function deleteGoal(id: string): Promise<void> {
   if (error) throw new Error('Failed to delete goal');
 }
 
+export async function requestGoalDeletion(params: {
+  goalId: string;
+  goalLabel: string;
+  requestedBy: string;
+  requestedByName: string;
+  requestedByRole: string;
+  approverRole: string;
+}): Promise<void> {
+  const row = {
+    id: `gdr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    goalid: params.goalId,
+    goallabel: params.goalLabel,
+    requestedby: params.requestedBy,
+    requestedbyname: params.requestedByName,
+    requestedbyrole: params.requestedByRole,
+    approverrole: params.approverRole,
+    status: 'pending',
+    createdat: Date.now(),
+  };
+  console.log('[API] Requesting goal deletion:', JSON.stringify(row));
+  const { error } = await supabase.from('sc_goal_deletion_requests').insert(row);
+  if (error) {
+    console.log('[API] Goal deletion request error:', error.message);
+    throw new Error('Failed to submit deletion request');
+  }
+}
+
+export async function getPendingDeletionRequests(goalIds: string[]): Promise<string[]> {
+  if (goalIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('sc_goal_deletion_requests')
+    .select('goalid')
+    .in('goalid', goalIds)
+    .eq('status', 'pending');
+  if (error) {
+    console.log('[API] Fetch pending deletion requests error:', error.message);
+    return [];
+  }
+  return (data ?? []).map((d: any) => d.goalid);
+}
+
 export async function transcribeAudio(formData: FormData): Promise<{ transcript: string }> {
   console.log('[API] Transcribing audio to', `${API_BASE}/transcribe`);
   const controller = new AbortController();
