@@ -5,13 +5,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Upload, Mic, ChevronDown } from 'lucide-react-native';
+import { Upload, Mic, ChevronDown, Package } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/contexts/ThemeContext';
 import { getScoreColor } from '@/constants/colors';
+import { useRouter } from 'expo-router';
 import { useTeamType } from '@/hooks/useData';
 import { transcribeAudio, analyzeCall, submitReport } from '@/services/api';
 
@@ -21,6 +22,7 @@ const OUTCOMES = ['Confirmed', 'Pending', 'Rejected', 'Not Interested', 'Unknown
 export default function TeamLeadCallsScreen() {
   const { user } = useAuth();
   const colors = useColors();
+  const router = useRouter();
   const teamType = useTeamType(user?.teamId);
   const queryClient = useQueryClient();
 
@@ -78,6 +80,19 @@ export default function TeamLeadCallsScreen() {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={[styles.title, { color: colors.text }]}>My Own Calls</Text>
           <Text style={[styles.subtitle, { color: colors.muted }]}>Upload and analyze your calls</Text>
+
+          <TouchableOpacity
+            style={[styles.bulkButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => router.push('/bulk-upload' as any)}
+            activeOpacity={0.7}
+          >
+            <Package size={20} color={colors.orange ?? '#F97316'} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.bulkButtonTitle, { color: colors.text }]}>📦 Bulk Upload</Text>
+              <Text style={[styles.bulkButtonSub, { color: colors.muted }]}>Upload & analyze 2–10 calls at once</Text>
+            </View>
+            <ChevronDown size={16} color={colors.muted} style={{ transform: [{ rotate: '-90deg' }] }} />
+          </TouchableOpacity>
 
           <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.row}>
@@ -177,5 +192,7 @@ const styles = StyleSheet.create({
   bigScore: { width: 80, height: 80, borderRadius: 40, borderWidth: 4, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
   bigScoreText: { fontSize: 28, fontWeight: '900' as const },
   verdict: { fontSize: 14, textAlign: 'center' as const },
-
+  bulkButton: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12, borderRadius: 14, padding: 16, borderWidth: 1, marginBottom: 14 },
+  bulkButtonTitle: { fontSize: 15, fontWeight: '700' as const },
+  bulkButtonSub: { fontSize: 12, marginTop: 2 },
 });
