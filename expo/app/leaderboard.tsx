@@ -5,12 +5,14 @@ import { getScoreColor, getRateColor } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
 import { Period, getInitials, getRoleBadgeColor, getRoleLabel } from '@/types';
 import { useUsersArray, useTeamsArray, useLogs, useReports } from '@/hooks/useData';
+import { useAuth } from '@/contexts/AuthContext';
 import { isDateInPeriod, isTimestampInPeriod } from '@/utils/date';
 import { formatNaira } from '@/utils/commission';
 import PeriodFilter from '@/components/PeriodFilter';
 
 export default function LeaderboardScreen() {
   const colors = useColors();
+  const { user: currentUser } = useAuth();
   const [period, setPeriod] = useState<Period>('month');
   const allUsers = useUsersArray();
   const allTeams = useTeamsArray();
@@ -34,8 +36,13 @@ export default function LeaderboardScreen() {
     }).sort((a, b) => b.rate - a.rate || b.earnings - a.earnings);
   }, [allTeams, allUsers, periodReports, periodLogs]);
 
+  const isManagement = currentUser?.role !== 'closer' && currentUser?.role !== 'teamlead';
+
   const individualRankings = useMemo(() => {
-    const closersAndLeads = allUsers.filter(u => u.role === 'closer' || u.role === 'teamlead');
+    let closersAndLeads = allUsers.filter(u => u.role === 'closer' || u.role === 'teamlead');
+    if (!isManagement && currentUser?.teamId) {
+      closersAndLeads = closersAndLeads.filter(u => u.teamId === currentUser.teamId);
+    }
     return closersAndLeads.map(user => {
       const uReports = periodReports.filter(r => r.closerId === user.id);
       const uLogs = periodLogs.filter(l => l.closerId === user.id);
@@ -46,7 +53,7 @@ export default function LeaderboardScreen() {
       const team = allTeams.find(t => t.id === user.teamId);
       return { user, calls: uReports.length, avgScore, rate, teamName: team?.name ?? '' };
     }).sort((a, b) => b.rate - a.rate || b.avgScore - a.avgScore);
-  }, [allUsers, allTeams, periodReports, periodLogs]);
+  }, [allUsers, allTeams, periodReports, periodLogs, isManagement, currentUser?.teamId]);
 
   const getRankIcon = (i: number) => {
     if (i === 0) return '🥇';
@@ -88,7 +95,9 @@ export default function LeaderboardScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>🏆 Individual Rankings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {isManagement ? '🏆 Individual Rankings' : '🏆 Individual Rankings — Your Team'}
+          </Text>
           {individualRankings.map((item, i) => (
             <View key={item.user.id} style={[styles.rankCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <Text style={styles.rank}>{getRankIcon(i)}</Text>
