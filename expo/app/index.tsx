@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated, Image } from 'react-native';
+import { View, Text, StyleSheet, Animated, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -59,11 +59,15 @@ export default function SplashLandingScreen() {
           },
         ]}
       >
-        <Image
-          source={{ uri: 'https://r2-pub.rork.com/generated-images/4c404a99-156b-45db-88b1-ec4bcbaeb88f.png' }}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <View style={styles.logoCircle}>
+          <Image
+            source={{ uri: 'https://r2-pub.rork.com/generated-images/4c404a99-156b-45db-88b1-ec4bcbaeb88f.png' }}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+        <Text style={styles.brandName}>Shoppyrex</Text>
+        <Text style={styles.brandSub}>SalesCoach</Text>
       </Animated.View>
     </View>
   );
@@ -80,8 +84,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  logoCircle: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   logo: {
-    width: 200,
-    height: 200,
+    width: 80,
+    height: 80,
+  },
+  brandName: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  brandSub: {
+    fontSize: 16,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.7)',
   },
 });
