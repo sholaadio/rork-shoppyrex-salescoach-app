@@ -1,26 +1,70 @@
-import { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Animated, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { useColors } from '@/contexts/ThemeContext';
 
-export default function IndexScreen() {
+export default function SplashLandingScreen() {
   const { user, isLoading, portal } = useAuth();
-  const colors = useColors();
   const router = useRouter();
+  const logoScale = useRef(new Animated.Value(0.7)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
-    if (isLoading) return;
-    if (!user || !portal) {
-      router.replace('/login');
-    } else {
+    Animated.parallel([
+      Animated.spring(logoScale, {
+        toValue: 1,
+        friction: 6,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    const timer = setTimeout(() => {
+      Animated.timing(logoOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setSplashDone(true);
+      });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [logoScale, logoOpacity]);
+
+  useEffect(() => {
+    if (!splashDone || isLoading) return;
+
+    if (user && portal) {
       router.replace(`/${portal}` as '/closer' | '/teamlead' | '/management');
+    } else {
+      router.replace('/login');
     }
-  }, [isLoading, user, portal, router]);
+  }, [splashDone, isLoading, user, portal, router]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ActivityIndicator size="large" color={colors.green} />
+    <View style={styles.container}>
+      <Animated.View
+        style={[
+          styles.logoWrapper,
+          {
+            opacity: logoOpacity,
+            transform: [{ scale: logoScale }],
+          },
+        ]}
+      >
+        <Image
+          source={require('@/assets/images/shoppyrex-logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </Animated.View>
     </View>
   );
 }
@@ -28,8 +72,16 @@ export default function IndexScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F97316',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#07080F',
+  },
+  logoWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 200,
+    height: 200,
   },
 });
