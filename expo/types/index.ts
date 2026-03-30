@@ -59,6 +59,7 @@ export interface CallAnalysis {
   scriptSuggestion?: string;
   skillBreakdown?: Record<string, number>;
   learningResources?: Array<{ type: string; title: string; url?: string }>;
+  resources?: any;
 }
 
 export interface CallReport {

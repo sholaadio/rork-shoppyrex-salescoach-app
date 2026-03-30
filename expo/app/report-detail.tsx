@@ -1,11 +1,11 @@
-import React, { useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { getScoreColor } from '@/constants/colors';
 import { useColors } from '@/contexts/ThemeContext';
 import { useReports } from '@/hooks/useData';
 import { formatTimestamp } from '@/utils/date';
-import { Clock, BarChart3, Youtube, BookOpen, Headphones, ExternalLink } from 'lucide-react-native';
+import { Clock, BarChart3 } from 'lucide-react-native';
 
 const SKILL_ORDER = [
   'Opening & Rapport',
@@ -35,11 +35,7 @@ export default function ReportDetailScreen() {
     return reports.find(r => r.id === id);
   }, [reports, id]);
 
-  const openUrl = useCallback((url: string) => {
-    if (url) {
-      Linking.openURL(url).catch(err => console.log('Failed to open URL:', err));
-    }
-  }, []);
+
 
   if (!report) {
     return (
@@ -59,20 +55,6 @@ export default function ReportDetailScreen() {
   const ngLanguage = analysis?.languageNote || analysis?.ngLanguage || analysis?.language;
   const criticalMoment = analysis?.transcriptInsight || analysis?.criticalMoment;
   const memorizeScript = analysis?.memorizeScript || analysis?.scriptSuggestion;
-  const resources = analysis?.resources || analysis?.learningResources;
-
-  const isResourceArray = Array.isArray(resources);
-  const resourceObj = !isResourceArray && resources ? resources : null;
-  const youtubeResources = isResourceArray
-    ? resources.filter((r: any) => r.type?.toLowerCase() === 'youtube' || r.type?.toLowerCase() === 'video')
-    : Array.isArray(resourceObj?.youtube) ? resourceObj.youtube : [];
-  const bookResources = isResourceArray
-    ? resources.filter((r: any) => r.type?.toLowerCase() === 'book' || r.type?.toLowerCase() === 'books')
-    : Array.isArray(resourceObj?.books) ? resourceObj.books : [];
-  const podcastResources = isResourceArray
-    ? resources.filter((r: any) => r.type?.toLowerCase() === 'podcast' || r.type?.toLowerCase() === 'podcasts')
-    : Array.isArray(resourceObj?.podcasts) ? resourceObj.podcasts : [];
-
   const skillBreakdown = analysis?.skillBreakdown;
   const metricsArray = analysis?.metrics;
   const orderedSkills = useMemo(() => {
@@ -230,86 +212,6 @@ export default function ReportDetailScreen() {
           </View>
         )}
 
-        {resources && (youtubeResources.length > 0 || bookResources.length > 0 || podcastResources.length > 0) && (
-          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>AI-Recommended Learning Resources</Text>
-
-            {youtubeResources.length > 0 && (
-              <View style={styles.resourceGroup}>
-                <View style={styles.resourceGroupHeader}>
-                  <Youtube size={16} color="#FF0000" />
-                  <Text style={[styles.resourceGroupTitle, { color: colors.text }]}>YouTube</Text>
-                </View>
-                {youtubeResources.map((res: any, i: number) => {
-                  const title = res.title || res.name || '';
-                  const ytUrl = res.url || `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' sales training')}`;
-                  return (
-                    <TouchableOpacity key={`yt-${i}`} style={[styles.resourceItem, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(ytUrl)} activeOpacity={0.7}>
-                      <Text style={[styles.resourceItemTitle, { color: colors.text }]}>{title}</Text>
-                      {(res.description || res.channel) && (
-                        <Text style={[styles.resourceItemDesc, { color: colors.soft }]}>{res.description || res.channel}</Text>
-                      )}
-                      <View style={styles.resourceLink}>
-                        <ExternalLink size={12} color={colors.blue} />
-                        <Text style={[styles.resourceLinkText, { color: colors.blue }]}>Search on YouTube →</Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-
-            {bookResources.length > 0 && (
-              <View style={styles.resourceGroup}>
-                <View style={styles.resourceGroupHeader}>
-                  <BookOpen size={16} color={colors.orange} />
-                  <Text style={[styles.resourceGroupTitle, { color: colors.text }]}>Books</Text>
-                </View>
-                {bookResources.map((res: any, i: number) => {
-                  const title = res.title || res.name || '';
-                  const bookUrl = res.url || `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=stripbooks`;
-                  return (
-                    <TouchableOpacity key={`bk-${i}`} style={[styles.resourceItem, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(bookUrl)} activeOpacity={0.7}>
-                      <Text style={[styles.resourceItemTitle, { color: colors.text }]}>{title}</Text>
-                      {res.author && <Text style={[styles.resourceAuthor, { color: colors.muted }]}>by {res.author}</Text>}
-                      {res.description && <Text style={[styles.resourceItemDesc, { color: colors.soft }]}>{res.description}</Text>}
-                      <View style={styles.resourceLink}>
-                        <ExternalLink size={12} color={colors.orange} />
-                        <Text style={[styles.resourceLinkText, { color: colors.orange }]}>Buy on Amazon →</Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-
-            {podcastResources.length > 0 && (
-              <View style={styles.resourceGroup}>
-                <View style={styles.resourceGroupHeader}>
-                  <Headphones size={16} color={colors.green} />
-                  <Text style={[styles.resourceGroupTitle, { color: colors.text }]}>Podcasts</Text>
-                </View>
-                {podcastResources.map((res: any, i: number) => {
-                  const title = res.title || res.name || '';
-                  const show = res.show || res.showName || '';
-                  const spotifyUrl = res.url || `https://open.spotify.com/search/${encodeURIComponent(show + ' ' + title)}`;
-                  return (
-                    <TouchableOpacity key={`pd-${i}`} style={[styles.resourceItem, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(spotifyUrl)} activeOpacity={0.7}>
-                      <Text style={[styles.resourceItemTitle, { color: colors.text }]}>{title}</Text>
-                      {show ? <Text style={[styles.resourceAuthor, { color: colors.muted }]}>{show}</Text> : null}
-                      {res.description && <Text style={[styles.resourceItemDesc, { color: colors.soft }]}>{res.description}</Text>}
-                      <View style={styles.resourceLink}>
-                        <ExternalLink size={12} color={colors.green} />
-                        <Text style={[styles.resourceLinkText, { color: colors.green }]}>Listen on Spotify →</Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-        )}
-
         <View style={{ height: 40 }} />
       </ScrollView>
     </View>
@@ -369,23 +271,5 @@ const styles = StyleSheet.create({
   criticalCard: { borderLeftWidth: 3 },
   memorizeCard: { borderLeftWidth: 3 },
   memorizeText: { fontSize: 13, lineHeight: 22, fontStyle: 'italic' as const },
-  resourceGroup: { marginBottom: 16 },
-  resourceGroupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  resourceGroupTitle: { fontSize: 14, fontWeight: '700' as const },
-  resourceItem: {
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-  },
-  resourceItemTitle: { fontSize: 13, fontWeight: '600' as const, marginBottom: 2 },
-  resourceAuthor: { fontSize: 11, marginBottom: 4 },
-  resourceItemDesc: { fontSize: 12, lineHeight: 17, marginBottom: 6 },
-  resourceLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginTop: 4,
-  },
-  resourceLinkText: { fontSize: 12, fontWeight: '600' as const },
+
 });

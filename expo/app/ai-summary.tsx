@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Linking } from 'react-native';
 import { Stack } from 'expo-router';
-import { Sparkles } from 'lucide-react-native';
+import { Sparkles, Youtube, BookOpen, Headphones, ExternalLink } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/contexts/ThemeContext';
@@ -29,6 +29,7 @@ export default function AISummaryScreen() {
     return userReports;
   }, [user, allReports, teamReports, teamMembers, userReports]);
   const [summary, setSummary] = useState<string | null>(null);
+  const [resources, setResources] = useState<any>(null);
 
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -66,9 +67,24 @@ export default function AISummaryScreen() {
         unique.forEach(w => summaryParts.push(`⚠️ ${w}`));
       }
 
-      return summaryParts.join('\n');
+      const allResources = reports
+        .map(r => r.analysis?.resources)
+        .filter(Boolean);
+
+      let aggregated: any = null;
+      if (allResources.length > 0) {
+        const latest = allResources[allResources.length - 1];
+        if (latest && typeof latest === 'object') {
+          aggregated = latest;
+        }
+      }
+
+      return { text: summaryParts.join('\n'), resources: aggregated };
     },
-    onSuccess: (data) => setSummary(data),
+    onSuccess: (data) => {
+      setSummary(data.text);
+      setResources(data.resources);
+    },
     onError: (err) => Alert.alert('Error', err instanceof Error ? err.message : 'Failed'),
   });
 
@@ -107,11 +123,110 @@ export default function AISummaryScreen() {
           </View>
         )}
 
+        {summary && resources && <ResourcesSection resources={resources} colors={colors} />}
+
         <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
 }
+
+function ResourcesSection({ resources, colors }: { resources: any; colors: any }) {
+  const openUrl = (url: string) => {
+    if (url) Linking.openURL(url).catch(err => console.log('Failed to open URL:', err));
+  };
+
+  const books: any[] = (Array.isArray(resources.books) ? resources.books : []).slice(0, 2);
+  const youtube: any[] = (Array.isArray(resources.youtube) ? resources.youtube : []).slice(0, 2);
+  const podcasts: any[] = (Array.isArray(resources.podcasts) ? resources.podcasts : []).slice(0, 2);
+
+  if (books.length === 0 && youtube.length === 0 && podcasts.length === 0) return null;
+
+  return (
+    <View style={[styles.resourcesCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Text style={[styles.resourcesTitle, { color: colors.text }]}>{"\uD83D\uDCDA"} Recommended Resources</Text>
+
+      {youtube.length > 0 && (
+        <View style={resStyles.group}>
+          <View style={resStyles.groupHeader}>
+            <Youtube size={16} color="#FF0000" />
+            <Text style={[resStyles.groupTitle, { color: colors.text }]}>YouTube</Text>
+          </View>
+          {youtube.map((r: any, i: number) => {
+            const title = r.title || r.name || '';
+            const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title)}`;
+            return (
+              <TouchableOpacity key={`yt-${i}`} style={[resStyles.item, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(ytUrl)} activeOpacity={0.7}>
+                <Text style={[resStyles.itemTitle, { color: colors.text }]}>{title}</Text>
+                <View style={resStyles.link}>
+                  <ExternalLink size={12} color={colors.blue} />
+                  <Text style={[resStyles.linkText, { color: colors.blue }]}>Search on YouTube \u2192</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+
+      {books.length > 0 && (
+        <View style={resStyles.group}>
+          <View style={resStyles.groupHeader}>
+            <BookOpen size={16} color={colors.orange} />
+            <Text style={[resStyles.groupTitle, { color: colors.text }]}>Books</Text>
+          </View>
+          {books.map((r: any, i: number) => {
+            const title = r.title || r.name || '';
+            const bookUrl = `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=stripbooks`;
+            return (
+              <TouchableOpacity key={`bk-${i}`} style={[resStyles.item, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(bookUrl)} activeOpacity={0.7}>
+                <Text style={[resStyles.itemTitle, { color: colors.text }]}>{title}</Text>
+                <View style={resStyles.link}>
+                  <ExternalLink size={12} color={colors.orange} />
+                  <Text style={[resStyles.linkText, { color: colors.orange }]}>Buy on Amazon \u2192</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+
+      {podcasts.length > 0 && (
+        <View style={resStyles.group}>
+          <View style={resStyles.groupHeader}>
+            <Headphones size={16} color={colors.green} />
+            <Text style={[resStyles.groupTitle, { color: colors.text }]}>Podcasts</Text>
+          </View>
+          {podcasts.map((r: any, i: number) => {
+            const title = r.title || r.name || '';
+            const show = r.show || r.showName || r.name || '';
+            const spotifyUrl = r.link || `https://open.spotify.com/search/${encodeURIComponent(show + ' ' + title)}`;
+            return (
+              <TouchableOpacity key={`pd-${i}`} style={[resStyles.item, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(spotifyUrl)} activeOpacity={0.7}>
+                <Text style={[resStyles.itemTitle, { color: colors.text }]}>{title}</Text>
+                {show ? <Text style={[resStyles.author, { color: colors.muted }]}>{show}</Text> : null}
+                <View style={resStyles.link}>
+                  <ExternalLink size={12} color={colors.green} />
+                  <Text style={[resStyles.linkText, { color: colors.green }]}>Listen on Spotify \u2192</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const resStyles = StyleSheet.create({
+  group: { marginBottom: 14 },
+  groupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  groupTitle: { fontSize: 14, fontWeight: '700' as const },
+  item: { borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1 },
+  itemTitle: { fontSize: 13, fontWeight: '600' as const, marginBottom: 2 },
+  author: { fontSize: 11, marginBottom: 4 },
+  link: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
+  linkText: { fontSize: 12, fontWeight: '600' as const },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -129,4 +244,6 @@ const styles = StyleSheet.create({
   generateText: { color: '#fff', fontSize: 15, fontWeight: '700' as const },
   summaryCard: { borderRadius: 16, padding: 18, marginTop: 16, borderWidth: 1 },
   summaryText: { fontSize: 14, lineHeight: 22 },
+  resourcesCard: { borderRadius: 16, padding: 18, marginTop: 16, borderWidth: 1 },
+  resourcesTitle: { fontSize: 16, fontWeight: '800' as const, marginBottom: 14 },
 });
