@@ -505,6 +505,37 @@ export async function createLogNotification(params: {
   }
 }
 
+export async function analyzeResources(weaknesses: string[], closerName: string): Promise<any> {
+  console.log('[API] Fetching AI resources for weaknesses...');
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  try {
+    const res = await fetch(`${API_BASE}/analyze-resources`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ weaknesses, closerName }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    console.log('[API] Analyze resources response status:', res.status);
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => 'Unknown error');
+      console.log('[API] Analyze resources error:', errorText);
+      throw new Error(`Resource analysis failed (${res.status}): ${errorText}`);
+    }
+    const data = await res.json();
+    console.log('[API] Analyze resources success');
+    return data;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err?.name === 'AbortError') {
+      throw new Error('Resource analysis timed out.');
+    }
+    console.log('[API] Analyze resources error:', err?.message);
+    throw err;
+  }
+}
+
 export async function checkSessionValid(): Promise<boolean> {
   try {
     const loginTime = await AsyncStorage.getItem('salescoach_login_time');

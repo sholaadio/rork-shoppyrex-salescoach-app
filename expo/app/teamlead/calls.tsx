@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet,
-  ActivityIndicator, Alert,
+  ActivityIndicator, Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Upload, Mic, ChevronDown } from 'lucide-react-native';
+import { Upload, Mic, ChevronDown, Youtube, BookOpen, Headphones, ExternalLink } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/contexts/ThemeContext';
 import { getScoreColor } from '@/constants/colors';
 import { useTeamType } from '@/hooks/useData';
-import { transcribeAudio, analyzeCall, submitReport } from '@/services/api';
+import { transcribeAudio, analyzeCall, submitReport, analyzeResources } from '@/services/api';
 
 const CALL_TYPES = ['Phone Call', 'WhatsApp'];
 const OUTCOMES = ['Confirmed', 'Pending', 'Rejected', 'Not Interested', 'Unknown'];
@@ -31,6 +31,8 @@ export default function TeamLeadCallsScreen() {
   const [analysis, setAnalysis] = useState<any>(null);
   const [showTypeDD, setShowTypeDD] = useState(false);
   const [showOutDD, setShowOutDD] = useState(false);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [bgResources, setBgResources] = useState<any>(null);
 
   const analyzeMutation = useMutation({
     mutationFn: async () => {
@@ -58,6 +60,18 @@ export default function TeamLeadCallsScreen() {
       setAnalysis(data);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void queryClient.invalidateQueries({ queryKey: ['reports'] });
+
+      if (data.weaknesses?.length > 0) {
+        setResourcesLoading(true);
+        setBgResources(null);
+        analyzeResources(data.weaknesses, user?.name ?? '')
+          .then((res) => {
+            console.log('[TL Calls] Background resources loaded');
+            setBgResources(res?.resources ?? res);
+          })
+          .catch((err) => console.log('[TL Calls] Background resources error:', err?.message))
+          .finally(() => setResourcesLoading(false));
+      }
     },
     onError: (err) => Alert.alert('Error', err instanceof Error ? err.message : 'Analysis failed'),
   });
@@ -137,6 +151,20 @@ export default function TeamLeadCallsScreen() {
                 <Text style={[styles.bigScoreText, { color: getScoreColor(analysis.score || 0, colors) }]}>{analysis.score || 0}</Text>
               </View>
               <Text style={[styles.verdict, { color: colors.soft }]}>{analysis.verdict || ''}</Text>
+
+              <View style={styles.resourcesSection}>
+                <Text style={[styles.resourcesTitle, { color: colors.text }]}>AI-Recommended Learning Resources</Text>
+                {resourcesLoading ? (
+                  <View style={styles.resourcesLoadingRow}>
+                    <ActivityIndicator size="small" color={colors.green} />
+                    <Text style={[styles.resourcesLoadingText, { color: colors.muted }]}>Finding personalized resources...</Text>
+                  </View>
+                ) : bgResources ? (
+                  <TLResourcesDisplay resources={bgResources} colors={colors} />
+                ) : (
+                  <Text style={[styles.resourcesLoadingText, { color: colors.muted }]}>No resources available</Text>
+                )}
+              </View>
             </View>
           )}
 
@@ -146,6 +174,95 @@ export default function TeamLeadCallsScreen() {
     </View>
   );
 }
+
+function TLResourcesDisplay({ resources, colors }: { resources: any; colors: any }) {
+  const openUrl = (url: string) => {
+    if (url) Linking.openURL(url).catch(err => console.log('Failed to open URL:', err));
+  };
+  const isArray = Array.isArray(resources);
+  const resourceObj = !isArray && resources ? resources : null;
+  const yt: any[] = isArray
+    ? resources.filter((r: any) => r.type?.toLowerCase() === 'youtube' || r.type?.toLowerCase() === 'video')
+    : Array.isArray(resourceObj?.youtube) ? resourceObj.youtube : [];
+  const bk: any[] = isArray
+    ? resources.filter((r: any) => r.type?.toLowerCase() === 'book' || r.type?.toLowerCase() === 'books')
+    : Array.isArray(resourceObj?.books) ? resourceObj.books : [];
+  const pd: any[] = isArray
+    ? resources.filter((r: any) => r.type?.toLowerCase() === 'podcast' || r.type?.toLowerCase() === 'podcasts')
+    : Array.isArray(resourceObj?.podcasts) ? resourceObj.podcasts : [];
+
+  if (yt.length === 0 && bk.length === 0 && pd.length === 0) {
+    return <Text style={{ fontSize: 13, color: colors.muted }}>No resources found</Text>;
+  }
+
+  return (
+    <View>
+      {yt.length > 0 && (
+        <View style={rs.group}>
+          <View style={rs.groupHeader}><Youtube size={16} color="#FF0000" /><Text style={[rs.groupTitle, { color: colors.text }]}>YouTube</Text></View>
+          {yt.map((r: any, i: number) => {
+            const title = r.title || r.name || '';
+            const url = r.url || `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' sales training')}`;
+            return (
+              <TouchableOpacity key={`yt-${i}`} style={[rs.item, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(url)} activeOpacity={0.7}>
+                <Text style={[rs.itemTitle, { color: colors.text }]}>{title}</Text>
+                {(r.description || r.channel) && <Text style={[rs.itemDesc, { color: colors.soft }]}>{r.description || r.channel}</Text>}
+                <View style={rs.link}><ExternalLink size={12} color={colors.blue} /><Text style={[rs.linkText, { color: colors.blue }]}>Search on YouTube →</Text></View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+      {bk.length > 0 && (
+        <View style={rs.group}>
+          <View style={rs.groupHeader}><BookOpen size={16} color={colors.orange} /><Text style={[rs.groupTitle, { color: colors.text }]}>Books</Text></View>
+          {bk.map((r: any, i: number) => {
+            const title = r.title || r.name || '';
+            const url = r.url || `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=stripbooks`;
+            return (
+              <TouchableOpacity key={`bk-${i}`} style={[rs.item, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(url)} activeOpacity={0.7}>
+                <Text style={[rs.itemTitle, { color: colors.text }]}>{title}</Text>
+                {r.author && <Text style={[rs.author, { color: colors.muted }]}>by {r.author}</Text>}
+                {r.description && <Text style={[rs.itemDesc, { color: colors.soft }]}>{r.description}</Text>}
+                <View style={rs.link}><ExternalLink size={12} color={colors.orange} /><Text style={[rs.linkText, { color: colors.orange }]}>Buy on Amazon →</Text></View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+      {pd.length > 0 && (
+        <View style={rs.group}>
+          <View style={rs.groupHeader}><Headphones size={16} color={colors.green} /><Text style={[rs.groupTitle, { color: colors.text }]}>Podcasts</Text></View>
+          {pd.map((r: any, i: number) => {
+            const title = r.title || r.name || '';
+            const show = r.show || r.showName || '';
+            const url = r.url || `https://open.spotify.com/search/${encodeURIComponent(show + ' ' + title)}`;
+            return (
+              <TouchableOpacity key={`pd-${i}`} style={[rs.item, { backgroundColor: colors.background, borderColor: colors.border }]} onPress={() => openUrl(url)} activeOpacity={0.7}>
+                <Text style={[rs.itemTitle, { color: colors.text }]}>{title}</Text>
+                {show ? <Text style={[rs.author, { color: colors.muted }]}>{show}</Text> : null}
+                {r.description && <Text style={[rs.itemDesc, { color: colors.soft }]}>{r.description}</Text>}
+                <View style={rs.link}><ExternalLink size={12} color={colors.green} /><Text style={[rs.linkText, { color: colors.green }]}>Listen on Spotify →</Text></View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const rs = StyleSheet.create({
+  group: { marginBottom: 16 },
+  groupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  groupTitle: { fontSize: 14, fontWeight: '700' as const },
+  item: { borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1 },
+  itemTitle: { fontSize: 13, fontWeight: '600' as const, marginBottom: 2 },
+  author: { fontSize: 11, marginBottom: 4 },
+  itemDesc: { fontSize: 12, lineHeight: 17, marginBottom: 6 },
+  link: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
+  linkText: { fontSize: 12, fontWeight: '600' as const },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -172,4 +289,8 @@ const styles = StyleSheet.create({
   bigScore: { width: 80, height: 80, borderRadius: 40, borderWidth: 4, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
   bigScoreText: { fontSize: 28, fontWeight: '900' as const },
   verdict: { fontSize: 14, textAlign: 'center' as const },
+  resourcesSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', width: '100%' },
+  resourcesTitle: { fontSize: 14, fontWeight: '700' as const, marginBottom: 10 },
+  resourcesLoadingRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 16 },
+  resourcesLoadingText: { fontSize: 13 },
 });
