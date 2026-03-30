@@ -3,7 +3,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
-import { Platform } from "react-native";
+import { Platform, StatusBar as RNStatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -19,7 +19,7 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style={isDark ? "light" : "dark"} />
+      <StatusBar style={isDark ? "light" : "dark"} translucent={false} />
       <Stack
         screenOptions={{
           headerBackTitle: "Back",
@@ -27,8 +27,10 @@ function RootLayoutNav() {
           headerTintColor: colors.text,
           contentStyle: { backgroundColor: colors.background },
           headerBackButtonDisplayMode: 'minimal',
-          headerTitleStyle: { fontWeight: '600' as const },
-          ...(Platform.OS === 'android' ? { statusBarTranslucent: true } : {}),
+          headerTitleStyle: { fontWeight: '600' as const, fontSize: 18 },
+          ...(Platform.OS === 'android' ? {
+            headerStatusBarHeight: RNStatusBar.currentHeight ?? 24,
+          } : {}),
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
