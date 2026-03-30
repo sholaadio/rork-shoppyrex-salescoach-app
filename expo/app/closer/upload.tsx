@@ -45,6 +45,7 @@ export default function UploadCallScreen() {
   const [analysis, setAnalysis] = useState<any>(null);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showOutcomeDropdown, setShowOutcomeDropdown] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -336,10 +337,14 @@ export default function UploadCallScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => analyzeMutation.mutate()}
-              disabled={analyzeMutation.isPending}
+              onPress={() => {
+                if (submitting || analyzeMutation.isPending) return;
+                setSubmitting(true);
+                analyzeMutation.mutate(undefined, { onSettled: () => setSubmitting(false) });
+              }}
+              disabled={submitting || analyzeMutation.isPending}
               activeOpacity={0.8}
-              style={{ marginTop: 16 }}
+              style={{ marginTop: 16, opacity: submitting || analyzeMutation.isPending ? 0.6 : 1 }}
             >
               <LinearGradient
                 colors={['#22C55E', '#16A34A', '#F97316']}

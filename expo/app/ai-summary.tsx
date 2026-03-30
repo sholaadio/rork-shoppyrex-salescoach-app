@@ -30,6 +30,7 @@ export default function AISummaryScreen() {
   }, [user, allReports, teamReports, teamMembers, userReports]);
   const [summary, setSummary] = useState<string | null>(null);
   const [resources, setResources] = useState<any>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -101,12 +102,16 @@ export default function AISummaryScreen() {
           <Text style={[styles.reportCount, { color: colors.muted }]}>{reports.length} call reports found</Text>
 
           <TouchableOpacity
-            style={[styles.generateBtn, { backgroundColor: colors.orange }, reports.length === 0 && { opacity: 0.5 }]}
-            onPress={() => generateMutation.mutate()}
-            disabled={generateMutation.isPending || reports.length === 0}
+            style={[styles.generateBtn, { backgroundColor: colors.orange }, (reports.length === 0 || submitting || generateMutation.isPending) && { opacity: 0.5 }]}
+            onPress={() => {
+              if (submitting || generateMutation.isPending) return;
+              setSubmitting(true);
+              generateMutation.mutate(undefined, { onSettled: () => setSubmitting(false) });
+            }}
+            disabled={submitting || generateMutation.isPending || reports.length === 0}
             activeOpacity={0.8}
           >
-            {generateMutation.isPending ? (
+            {(submitting || generateMutation.isPending) ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <>

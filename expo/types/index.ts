@@ -86,8 +86,9 @@ export interface NoAnswerLog {
   customerName: string;
   reason: string;
   attempts: number;
+  callbackDate?: string;
   notes: string;
-  date: number;
+  date: string | number;
 }
 
 export interface Goal {

@@ -186,19 +186,27 @@ export async function submitNoAnswer(payload: {
   closerId: string;
   closerName: string;
   teamId: string;
-  count: number;
-  date: string;
+  orderId?: string;
+  customerName?: string;
+  reason?: string;
+  attempts?: number;
+  callbackDate?: string;
   notes: string;
+  date: string;
 }): Promise<any> {
   console.log('[API] Submitting no-answer to Supabase...');
-  const row = {
+  const row: Record<string, any> = {
     id: `na_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     closerId: payload.closerId,
     closerName: payload.closerName,
     teamId: payload.teamId,
-    count: payload.count,
-    date: payload.date,
+    orderId: payload.orderId || '',
+    customerName: payload.customerName || '',
+    reason: payload.reason || '',
+    attempts: payload.attempts ?? 1,
+    callbackDate: payload.callbackDate || null,
     notes: payload.notes || '',
+    date: payload.date,
     createdAt: Date.now(),
   };
   console.log('[API] No-answer payload:', JSON.stringify(row));
@@ -421,8 +429,8 @@ export async function fetchNotifications(recipientId: string): Promise<any[]> {
   const { data, error } = await supabase
     .from('sc_notifications')
     .select('*')
-    .eq('recipientId', recipientId)
-    .order('createdAt', { ascending: false })
+    .eq('recipientid', recipientId)
+    .order('createdat', { ascending: false })
     .limit(50);
   if (error) {
     console.log('[API] Fetch notifications error:', error.message);
@@ -435,7 +443,7 @@ export async function getUnreadNotificationCount(recipientId: string): Promise<n
   const { count, error } = await supabase
     .from('sc_notifications')
     .select('*', { count: 'exact', head: true })
-    .eq('recipientId', recipientId)
+    .eq('recipientid', recipientId)
     .eq('read', false);
   if (error) {
     console.log('[API] Unread count error:', error.message);
@@ -484,15 +492,15 @@ export async function createLogNotification(params: {
 
     const row = {
       id: `notif_${Date.now()}`,
-      recipientId,
-      recipientRole: 'teamlead',
-      teamId: params.teamId,
+      recipientid: recipientId,
+      recipientrole: 'teamlead',
+      teamid: params.teamId,
       type: 'log_submitted',
       title: '\ud83d\udccb New Log Submitted',
       message: `${params.closerName} submitted their daily log for approval`,
       data: { logId: params.logId, closerId: params.closerId },
       read: false,
-      createdAt: Date.now(),
+      createdat: Date.now(),
     };
     const { error } = await supabase.from('sc_notifications').insert(row);
     if (error) {

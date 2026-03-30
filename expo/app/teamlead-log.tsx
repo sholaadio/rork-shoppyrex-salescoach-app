@@ -29,6 +29,7 @@ export default function TeamLeadLogScreen() {
   const [repeats, setRepeats] = useState('');
   const [referrals, setReferrals] = useState('');
   const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const commission = useMemo(() => {
     return calculateCommission(
@@ -106,9 +107,18 @@ export default function TeamLeadLogScreen() {
             </View>
             <Text style={[styles.commTotal, { color: colors.green }]}>Total: {formatNaira(commission.total)}</Text>
           </View>
-          <TouchableOpacity onPress={() => submitMutation.mutate()} disabled={submitMutation.isPending} activeOpacity={0.8}>
+          <TouchableOpacity
+            onPress={() => {
+              if (submitting || submitMutation.isPending) return;
+              setSubmitting(true);
+              submitMutation.mutate(undefined, { onSettled: () => setSubmitting(false) });
+            }}
+            disabled={submitting || submitMutation.isPending}
+            activeOpacity={0.8}
+            style={{ opacity: submitting || submitMutation.isPending ? 0.6 : 1 }}
+          >
             <LinearGradient colors={['#22C55E', '#16A34A', '#F97316']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.submitBtn}>
-              {submitMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>📊 Submit Daily Log (Auto-Approved)</Text>}
+              {(submitting || submitMutation.isPending) ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>📊 Submit Daily Log (Auto-Approved)</Text>}
             </LinearGradient>
           </TouchableOpacity>
         </View>

@@ -14,11 +14,12 @@ interface Notification {
   message: string;
   type: string;
   read: boolean;
-  createdAt: number;
+  createdat: number;
   data?: any;
 }
 
 function timeAgo(ts: number): string {
+  if (!ts || isNaN(ts)) return '';
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'Just now';
@@ -84,7 +85,7 @@ export default function NotificationBell() {
       <View style={styles.notifContent}>
         <Text style={[styles.notifTitle, { color: colors.text }]}>{item.title}</Text>
         <Text style={[styles.notifMessage, { color: colors.soft }]} numberOfLines={2}>{item.message}</Text>
-        <Text style={[styles.notifTime, { color: colors.muted }]}>{timeAgo(item.createdAt)}</Text>
+        <Text style={[styles.notifTime, { color: colors.muted }]}>{timeAgo(item.createdat)}</Text>
       </View>
       {!item.read && <View style={[styles.unreadDot, { backgroundColor: colors.green }]} />}
     </TouchableOpacity>
