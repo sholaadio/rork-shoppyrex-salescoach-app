@@ -1,4 +1,5 @@
 import { User, Team, DailyLog, CallReport, NoAnswerLog, Goal } from '@/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/services/supabase';
 
 const API_BASE = 'https://salescoach-server.onrender.com';
@@ -181,16 +182,33 @@ export async function deleteReport(id: string): Promise<void> {
   if (error) throw new Error('Failed to delete report');
 }
 
-export async function submitNoAnswer(log: Partial<NoAnswerLog>): Promise<NoAnswerLog> {
+export async function submitNoAnswer(payload: {
+  closerId: string;
+  closerName: string;
+  teamId: string;
+  count: number;
+  date: string;
+  notes: string;
+}): Promise<any> {
   console.log('[API] Submitting no-answer to Supabase...');
-  const id = log.id || `na_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const row = { ...log, id };
+  const row = {
+    id: `na_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    closerId: payload.closerId,
+    closerName: payload.closerName,
+    teamId: payload.teamId,
+    count: payload.count,
+    date: payload.date,
+    notes: payload.notes || '',
+    createdAt: Date.now(),
+  };
+  console.log('[API] No-answer payload:', JSON.stringify(row));
   const { data, error } = await supabase.from('sc_noanswers').insert(row).select().single();
   if (error) {
-    console.log('[API] Supabase submit no-answer error:', error.message);
-    throw new Error('Failed to submit no-answer');
+    console.log('[API] Supabase submit no-answer FULL error:', JSON.stringify(error));
+    throw new Error(`Failed to submit no-answer: ${error.message}`);
   }
-  return mapNoAnswer(data);
+  console.log('[API] No-answer saved successfully:', data?.id);
+  return data;
 }
 
 export async function deleteNoAnswer(id: string): Promise<void> {
@@ -396,6 +414,107 @@ function mapNoAnswer(row: any): NoAnswerLog {
     notes: row.notes ?? '',
     date: row.date ?? 0,
   };
+}
+
+export async function fetchNotifications(recipientId: string): Promise<any[]> {
+  console.log('[API] Fetching notifications for:', recipientId);
+  const { data, error } = await supabase
+    .from('sc_notifications')
+    .select('*')
+    .eq('recipientId', recipientId)
+    .order('createdAt', { ascending: false })
+    .limit(50);
+  if (error) {
+    console.log('[API] Fetch notifications error:', error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function getUnreadNotificationCount(recipientId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('sc_notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('recipientId', recipientId)
+    .eq('read', false);
+  if (error) {
+    console.log('[API] Unread count error:', error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+export async function markNotificationRead(notifId: string): Promise<void> {
+  const { error } = await supabase
+    .from('sc_notifications')
+    .update({ read: true })
+    .eq('id', notifId);
+  if (error) console.log('[API] Mark read error:', error.message);
+}
+
+export async function createLogNotification(params: {
+  closerName: string;
+  closerId: string;
+  teamId: string;
+  logId: string;
+}): Promise<void> {
+  console.log('[API] Creating log notification for team:', params.teamId);
+  try {
+    const { data: teamData } = await supabase
+      .from('sc_teams')
+      .select('leadId')
+      .eq('id', params.teamId)
+      .maybeSingle();
+
+    let recipientId = teamData?.leadId;
+    if (!recipientId) {
+      const { data: leads } = await supabase
+        .from('sc_users')
+        .select('id')
+        .eq('role', 'teamlead')
+        .eq('teamId', params.teamId)
+        .limit(1);
+      recipientId = leads?.[0]?.id;
+    }
+
+    if (!recipientId) {
+      console.log('[API] No team lead found for team:', params.teamId);
+      return;
+    }
+
+    const row = {
+      id: `notif_${Date.now()}`,
+      recipientId,
+      recipientRole: 'teamlead',
+      teamId: params.teamId,
+      type: 'log_submitted',
+      title: '\ud83d\udccb New Log Submitted',
+      message: `${params.closerName} submitted their daily log for approval`,
+      data: { logId: params.logId, closerId: params.closerId },
+      read: false,
+      createdAt: Date.now(),
+    };
+    const { error } = await supabase.from('sc_notifications').insert(row);
+    if (error) {
+      console.log('[API] Create notification error:', error.message);
+    } else {
+      console.log('[API] Notification created for TL:', recipientId);
+    }
+  } catch (e) {
+    console.log('[API] createLogNotification catch:', e);
+  }
+}
+
+export async function checkSessionValid(): Promise<boolean> {
+  try {
+    const loginTime = await AsyncStorage.getItem('salescoach_login_time');
+    if (!loginTime) return true;
+    const elapsed = Date.now() - parseInt(loginTime, 10);
+    if (elapsed > 8 * 60 * 60 * 1000) return false;
+    return true;
+  } catch {
+    return true;
+  }
 }
 
 function mapGoal(row: any): Goal {

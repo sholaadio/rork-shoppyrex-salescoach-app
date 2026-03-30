@@ -6,6 +6,8 @@ import { User, PortalType, getPortalForRole } from '@/types';
 import { supabase } from '@/services/supabase';
 
 const AUTH_STORAGE_KEY = 'salescoach_auth_user';
+const LOGIN_TIME_KEY = 'salescoach_login_time';
+const SESSION_TIMEOUT_MS = 8 * 60 * 60 * 1000;
 
 export function mapSupabaseIdToEmployeeId(supabaseId: string): string {
   if (supabaseId.startsWith('ceo')) return 'MGT001';
@@ -115,6 +117,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         };
 
         await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(foundUser));
+        await AsyncStorage.setItem(LOGIN_TIME_KEY, String(Date.now()));
         console.log('[Auth] Login successful (fallback):', foundUser.name, foundUser.role);
         return foundUser;
       }
@@ -131,6 +134,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       };
 
       await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(foundUser));
+      await AsyncStorage.setItem(LOGIN_TIME_KEY, String(Date.now()));
       console.log('[Auth] Login successful:', foundUser.name, foundUser.role);
       return foundUser;
     },
@@ -142,12 +146,31 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+      await AsyncStorage.removeItem(LOGIN_TIME_KEY);
       console.log('[Auth] Logged out');
     },
     onSuccess: () => {
       setUser(null);
     },
   });
+
+  const forceLogout = useCallback(async () => {
+    console.log('[Auth] Force logout - session expired');
+    await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+    await AsyncStorage.removeItem(LOGIN_TIME_KEY);
+    setUser(null);
+  }, []);
+
+  const isSessionExpired = useCallback(async (): Promise<boolean> => {
+    try {
+      const loginTime = await AsyncStorage.getItem(LOGIN_TIME_KEY);
+      if (!loginTime) return false;
+      const elapsed = Date.now() - parseInt(loginTime, 10);
+      return elapsed > SESSION_TIMEOUT_MS;
+    } catch {
+      return false;
+    }
+  }, []);
 
   const portal = useMemo((): PortalType | null => {
     return user ? getPortalForRole(user.role) : null;
@@ -162,5 +185,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     loginMutation,
     logoutMutation,
     setUser: handleSetUser,
-  }), [user, isLoading, portal, loginMutation, logoutMutation, handleSetUser]);
+    forceLogout,
+    isSessionExpired,
+  }), [user, isLoading, portal, loginMutation, logoutMutation, handleSetUser, forceLogout, isSessionExpired]);
 });

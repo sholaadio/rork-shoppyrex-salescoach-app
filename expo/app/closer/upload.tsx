@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet,
-  ActivityIndicator, Alert,
+  Animated, Easing, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mic, Upload, ChevronDown } from 'lucide-react-native';
+import { Mic, Upload, ChevronDown, Bot, Sparkles } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +17,20 @@ import { transcribeAudio, analyzeCall, submitReport } from '@/services/api';
 
 const CALL_TYPES = ['Phone Call', 'WhatsApp'];
 const OUTCOMES = ['Confirmed', 'Cancelled', 'Follow Up', 'Callback', 'Unknown'];
+
+interface ProgressStage {
+  label: string;
+  subtitle: string;
+  minPercent: number;
+  maxPercent: number;
+}
+
+const STAGES: ProgressStage[] = [
+  { label: 'Uploading audio...', subtitle: 'Preparing your recording for analysis', minPercent: 0, maxPercent: 20 },
+  { label: 'Transcribing your call...', subtitle: 'AI is converting speech to text', minPercent: 20, maxPercent: 50 },
+  { label: 'AI is analyzing your performance...', subtitle: 'Identifying strengths and areas to improve', minPercent: 50, maxPercent: 80 },
+  { label: 'Generating your coaching report...', subtitle: 'Almost there! Crafting personalized feedback', minPercent: 80, maxPercent: 100 },
+];
 
 export default function UploadCallScreen() {
   const { user } = useAuth();
@@ -32,10 +46,76 @@ export default function UploadCallScreen() {
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showOutcomeDropdown, setShowOutcomeDropdown] = useState(false);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentStageIdx, setCurrentStageIdx] = useState(0);
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const iconRotate = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!isProcessing) return;
+
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.15, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+
+    const rotate = Animated.loop(
+      Animated.timing(iconRotate, { toValue: 1, duration: 3000, easing: Easing.linear, useNativeDriver: true })
+    );
+
+    pulse.start();
+    rotate.start();
+
+    return () => { pulse.stop(); rotate.stop(); };
+  }, [isProcessing, pulseAnim, iconRotate]);
+
+  const advanceFakeProgress = useCallback((stageIdx: number) => {
+    if (stageIdx >= STAGES.length) return;
+    const stage = STAGES[stageIdx];
+    const target = stage.maxPercent - 5;
+    const duration = stageIdx === 0 ? 2000 : 8000;
+
+    Animated.timing(progressAnim, {
+      toValue: target,
+      duration,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+  }, [progressAnim]);
+
+  const setStage = useCallback((idx: number) => {
+    setCurrentStageIdx(idx);
+    if (idx < STAGES.length) {
+      Animated.timing(progressAnim, {
+        toValue: STAGES[idx].minPercent,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => advanceFakeProgress(idx));
+    }
+  }, [progressAnim, advanceFakeProgress]);
+
+  const finishProgress = useCallback(() => {
+    Animated.timing(progressAnim, {
+      toValue: 100,
+      duration: 500,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+  }, [progressAnim]);
+
   const analyzeMutation = useMutation({
     mutationFn: async () => {
       if (!audioFile) throw new Error('Please select an audio file');
       if (!product.trim()) throw new Error('Please enter the product pitched');
+
+      setIsProcessing(true);
+      setCurrentStageIdx(0);
+      progressAnim.setValue(0);
+
+      setStage(0);
 
       const formData = new FormData();
       const fileObj = {
@@ -45,8 +125,10 @@ export default function UploadCallScreen() {
       };
       formData.append('audio', fileObj as any);
 
+      setStage(1);
       const { transcript } = await transcribeAudio(formData);
 
+      setStage(2);
       const { analysis: result } = await analyzeCall({
         transcript,
         closerName: user?.name ?? '',
@@ -64,6 +146,8 @@ export default function UploadCallScreen() {
       }
 
       const score = parsed.overallScore ?? parsed.score ?? 0;
+
+      setStage(3);
 
       const outcomeMap: Record<string, string> = {
         'confirmed': 'confirmed',
@@ -86,14 +170,20 @@ export default function UploadCallScreen() {
         audioFileName: audioFile?.name || 'recording.m4a',
       } as any);
 
+      finishProgress();
+      await new Promise(r => setTimeout(r, 600));
+
       return { ...parsed, score };
     },
     onSuccess: (data) => {
+      setIsProcessing(false);
       setAnalysis(data);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void queryClient.invalidateQueries({ queryKey: ['reports'] });
     },
     onError: (err) => {
+      setIsProcessing(false);
+      progressAnim.setValue(0);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Error', err instanceof Error ? err.message : 'Analysis failed');
     },
@@ -113,6 +203,63 @@ export default function UploadCallScreen() {
       console.log('Picker error:', e);
     }
   };
+
+  const spin = iconRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
+
+  if (isProcessing) {
+    const stage = STAGES[currentStageIdx] ?? STAGES[0];
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          <View style={styles.processingContainer}>
+            <Animated.View style={[styles.iconCircle, { backgroundColor: colors.green + '15', transform: [{ scale: pulseAnim }] }]}>
+              <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                {currentStageIdx < 2 ? (
+                  <Mic size={48} color={colors.green} />
+                ) : (
+                  <Bot size={48} color={colors.green} />
+                )}
+              </Animated.View>
+            </Animated.View>
+
+            <Sparkles size={20} color={colors.orange} style={{ marginTop: 16 }} />
+
+            <Text style={[styles.processingTitle, { color: colors.text }]}>{stage.label}</Text>
+            <Text style={[styles.processingSubtitle, { color: colors.muted }]}>{stage.subtitle}</Text>
+
+            <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+              <Animated.View style={[styles.progressFill, { width: progressWidth }]}>
+                <LinearGradient
+                  colors={['#22C55E', '#16A34A', '#F97316']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={StyleSheet.absoluteFill}
+                />
+              </Animated.View>
+            </View>
+
+            <View style={styles.stageDotsRow}>
+              {STAGES.map((s, i) => (
+                <View key={i} style={[styles.stageDot, { backgroundColor: i <= currentStageIdx ? colors.green : colors.border }]} />
+              ))}
+            </View>
+
+            <Text style={[styles.tipText, { color: colors.muted }]}>
+              This usually takes 30–90 seconds{'\n'}Please don't close the app
+            </Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -197,11 +344,7 @@ export default function UploadCallScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.analyzeButton}
               >
-                {analyzeMutation.isPending ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.analyzeButtonText}>🎙️ → 🤖 Transcribe & Analyze Call</Text>
-                )}
+                <Text style={styles.analyzeButtonText}>🎙️ → 🤖 Transcribe & Analyze Call</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -295,4 +438,32 @@ const styles = StyleSheet.create({
   listSection: { marginBottom: 16 },
   listTitle: { fontSize: 14, fontWeight: '700' as const, marginBottom: 6 },
   listItem: { fontSize: 13, marginBottom: 3, lineHeight: 18 },
+  processingContainer: {
+    flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32,
+  },
+  iconCircle: {
+    width: 120, height: 120, borderRadius: 60,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  processingTitle: {
+    fontSize: 18, fontWeight: '700' as const, marginTop: 16, textAlign: 'center' as const,
+  },
+  processingSubtitle: {
+    fontSize: 14, marginTop: 6, textAlign: 'center' as const, lineHeight: 20,
+  },
+  progressTrack: {
+    width: '85%', height: 8, borderRadius: 4, marginTop: 28, overflow: 'hidden' as const,
+  },
+  progressFill: {
+    height: '100%', borderRadius: 4, overflow: 'hidden' as const,
+  },
+  stageDotsRow: {
+    flexDirection: 'row', gap: 8, marginTop: 16,
+  },
+  stageDot: {
+    width: 8, height: 8, borderRadius: 4,
+  },
+  tipText: {
+    fontSize: 13, textAlign: 'center' as const, marginTop: 32, lineHeight: 20,
+  },
 });

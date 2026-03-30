@@ -13,7 +13,7 @@ import { getRateColor, getTierColor, ThemeColors } from '@/constants/colors';
 import { useUserLogs, useTeamType } from '@/hooks/useData';
 import { getToday } from '@/utils/date';
 import { calculateCommission, formatNaira } from '@/utils/commission';
-import { submitLog } from '@/services/api';
+import { submitLog, createLogNotification } from '@/services/api';
 
 export default function DailyLogScreen() {
   const { user } = useAuth();
@@ -64,12 +64,18 @@ export default function DailyLogScreen() {
         submittedAt: Date.now(),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Success', 'Daily log submitted for approval');
       setAssigned(''); setConfirmed(''); setDelivered('');
       setUpsells(''); setRepeats(''); setReferrals(''); setNotes('');
       void queryClient.invalidateQueries({ queryKey: ['logs'] });
+      void createLogNotification({
+        closerName: user?.name ?? '',
+        closerId: user?.id ?? '',
+        teamId: user?.teamId ?? '',
+        logId: data.id,
+      });
     },
     onError: (err) => {
       Alert.alert('Error', err instanceof Error ? err.message : 'Submit failed');

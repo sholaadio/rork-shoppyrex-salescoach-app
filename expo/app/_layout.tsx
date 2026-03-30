@@ -6,6 +6,7 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import SessionGuard from "@/components/SessionGuard";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -55,7 +56,9 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ThemeProvider>
           <AuthProvider>
-            <RootLayoutNav />
+            <SessionGuard>
+              <RootLayoutNav />
+            </SessionGuard>
           </AuthProvider>
         </ThemeProvider>
       </GestureHandlerRootView>

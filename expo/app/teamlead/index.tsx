@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AlertCircle, ChevronRight } from 'lucide-react-native';
+import NotificationBell from '@/components/NotificationBell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/contexts/ThemeContext';
 import { getScoreColor, getRateColor } from '@/constants/colors';
@@ -64,8 +65,13 @@ export default function MyTeamScreen() {
             </TouchableOpacity>
           )}
 
-          <Text style={[styles.title, { color: colors.text }]}>{teamName}</Text>
-          <Text style={[styles.subtitle, { color: colors.muted }]}>{closers.length} members</Text>
+          <View style={styles.titleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.title, { color: colors.text }]}>{teamName}</Text>
+              <Text style={[styles.subtitle, { color: colors.muted }]}>{closers.length} members</Text>
+            </View>
+            <NotificationBell />
+          </View>
 
           <PeriodFilter selected={period} onSelect={setPeriod} />
 
@@ -143,8 +149,9 @@ const styles = StyleSheet.create({
     borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, gap: 8,
   },
   alertText: { flex: 1, fontWeight: '600' as const, fontSize: 13 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 },
   title: { fontSize: 22, fontWeight: '800' as const },
-  subtitle: { fontSize: 13, marginBottom: 16 },
+  subtitle: { fontSize: 13, marginBottom: 12 },
   statsRow: { flexDirection: 'row', marginBottom: 0 },
   memberCard: {
     borderRadius: 12, padding: 14, marginBottom: 8,
